@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>تسجيل حضور الطالب - سنتر النجاح</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: var(--bg-page);
+            font-family: var(--font-main);
+            color: var(--text-title);
+            margin: 0;
+            padding: 16px 12px;
+        }
+
+        .student-att-container {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .student-att-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: clamp(16px, 3.5vw, 24px);
+            padding: clamp(20px, 4vw, 32px);
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-att-header {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .student-att-logo {
+            width: 82px;
+            height: 82px;
+            object-fit: contain;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: block;
+            box-shadow: 0 4px 18px rgba(16, 185, 129, 0.25);
+        }
+
+        .student-att-header h1 {
+            font-size: clamp(20px, 4.5vw, 24px);
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            color: var(--text-title);
+        }
+
+        .student-att-header p {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .qr-verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 700;
+            margin-top: 10px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        [data-theme="dark"] .qr-verified-badge {
+            color: #34d399;
+        }
+
+        .qr-expired-box {
+            text-align: center;
+            padding: 30px 16px;
+        }
+
+        .qr-expired-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 16px;
+        }
+
+        .qr-expired-box h2 {
+            font-size: 20px;
+            margin: 0 0 8px 0;
+            color: #ef4444;
+        }
+
+        .qr-expired-box p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0 0 20px 0;
+            line-height: 1.6;
+        }
+
+        /* شاشة تأكيد النجاح */
+        .att-success-card {
+            text-align: center;
+            padding: 26px 16px;
+            animation: fadeInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .success-checkmark-circle {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 18px;
+            box-shadow: 0 10px 26px rgba(16, 185, 129, 0.4);
+            animation: bounceIn 0.6s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .att-summary-details {
+            background: var(--section-bg);
+            border: 1px solid var(--section-border);
+            border-radius: 14px;
+            padding: 16px;
+            margin: 18px 0;
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .att-summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--section-border);
+        }
+
+        .att-summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .att-summary-row span.label {
+            color: var(--text-muted);
+        }
+
+        .att-summary-row span.value {
+            font-weight: 700;
+            color: var(--text-title);
+        }
+
+        .btn-confirm-att {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            font-family: var(--font-main);
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            transition: all 0.25s ease;
+            margin-top: 18px;
+        }
+
+        .btn-confirm-att:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(16, 185, 129, 0.45);
+        }
+
+        .btn-confirm-att:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <script src="protect.js"></script>
+
+    <!-- الفقاعات الضوئية التفاعلية -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="student-att-container">
+        <!-- ── حالة 1: الرمز منتهي الصلاحية ── -->
+        <div id="viewExpired" class="student-att-card qr-expired-box" style="display: none;">
+            <div class="qr-expired-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <h2>انتهت صلاحية رمز الـ QR!</h2>
+            <p>
+                رمز الـ QR يتجدد تلقائياً كل <strong>25 ثانية</strong> على شاشة السنتر لضمان تسجيل الحضور الحي.<br>
+                يرجى مسح الرمز الجديد المتجدد الآن على الشاشة.
+            </p>
+            <a href="index.html" style="text-decoration: none;">
+                <button type="button" class="btn-confirm-att" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>فتح الكاميرا والمسح مرة أخرى</span>
+                </button>
+            </a>
+        </div>
+
+        <!-- ── حالة 2: نموذج تسجيل الحضور ── -->
+        <div id="viewForm" class="student-att-card" style="display: none;">
+            <div class="student-att-header">
+                <img src="logo.png" alt="Success Center" class="student-att-logo">
+                <h1>تسجيل حضور وغياب الطالب</h1>
+                <p>سجّل حضورك في الحصة مع مدرسك الآن</p>
+                <div class="qr-verified-badge" id="qrBadge">
+                    <i class="fa-solid fa-shield-check"></i>
+                    <span>رمز QR معتمد وصالح من شاشة السنتر</span>
+                </div>
+            </div>
+
+            <form id="studentAttForm" onsubmit="handleStudentAttSubmit(event)">
+                <!-- حقل اسم الطالب مع الإكمال التلقائي الذكي -->
+                <label><i class="fa-solid fa-user"></i> اسم الطالب (ثلاثي):</label>
+                <div class="autocomplete-wrapper" style="margin-bottom: 14px;">
+                    <input type="text" id="attStudentNameInput" placeholder="اكتب اسمك للبحث والتكملة التلقائية..." autocomplete="off" required>
+                    <div id="attStudentDropdown" class="autocomplete-dropdown"></div>
+                </div>
+
+                <!-- حقل المعلم -->
+                <label><i class="fa-solid fa-chalkboard-user"></i> المعلم المسجل معه:</label>
+                <div class="autocomplete-wrapper" style="margin-bottom: 14px;">
+                    <select id="attTeacherSelect" required style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--input-color); font-family: var(--font-main); font-size: 14.5px; font-weight: 600;">
+                        <option value="">-- جاري تحميل قائمة المعلمين... --</option>
+                    </select>
+                </div>
+
+                <div class="grid-2">
+                    <div>
+                        <label><i class="fa-solid fa-layer-group"></i> الفئة الدراسية:</label>
+                        <select id="attCategorySelect" required onchange="onCategoryChange()" style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--input-color); font-family: var(--font-main); font-size: 14px; font-weight: 600;">
+                            <option value="">-- اختر الفئة --</option>
+                            <option value="ابتدائي">ابتدائي</option>
+                            <option value="ابتدائي لغات">ابتدائي لغات</option>
+                            <option value="اعدادي">إعدادي</option>
+                            <option value="اعدادي لغات">إعدادي لغات</option>
+                            <option value="ثانوي">ثانوي</option>
+                            <option value="ثانوي لغات">ثانوي لغات</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label><i class="fa-solid fa-graduation-cap"></i> الصف الدراسي:</label>
+                        <select id="attGradeSelect" required style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--input-color); font-family: var(--font-main); font-size: 14px; font-weight: 600;">
+                            <option value="">-- اختر الصف أولاً --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 14px;">
+                    <label><i class="fa-solid fa-note-sticky"></i> ملاحظة إضافية (اختياري):</label>
+                    <input type="text" id="attNoteInput" placeholder="أي ملاحظة تود كتابتها للمدرس أو الإدارة...">
+                </div>
+
+                <button type="submit" id="btnConfirmAtt" class="btn-confirm-att">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>تأكيد تسجيل حضوري الآن</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- ── حالة 3: شاشة تأكيد النجاح بعد التسجيل ── -->
+        <div id="viewSuccess" class="student-att-card att-success-card" style="display: none;">
+            <div class="success-checkmark-circle">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h2 style="font-size: 22px; margin: 0 0 6px 0; color: #10b981;">تم تسجيل حضورك بنجاح! 🎉</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin: 0;">أهلاً بك في سنتر النجاح، نتمنى لك حصة موفقة وممتعة.</p>
+
+            <div class="att-summary-details">
+                <div class="att-summary-row">
+                    <span class="label">اسم الطالب:</span>
+                    <span class="value" id="resStudentName">-</span>
+                </div>
+                <div class="att-summary-row">
+                    <span class="label">المعلم:</span>
+                    <span class="value" id="resTeacherName">-</span>
+                </div>
+                <div class="att-summary-row">
+                    <span class="label">الصف الدراسي:</span>
+                    <span class="value" id="resGradeInfo">-</span>
+                </div>
+                <div class="att-summary-row">
+                    <span class="label">تاريخ ووقت الحضور:</span>
+                    <span class="value" id="resTimeInfo">-</span>
+                </div>
+                <div class="att-summary-row">
+                    <span class="label">حالة الحضور:</span>
+                    <span class="value" style="color: #10b981; font-weight: 800;">حاضر (مؤكد بالـ QR)</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <a href="index.html" style="text-decoration: none; flex: 1;">
+                    <button type="button" class="btn-secondary" style="width: 100%; margin: 0; padding: 12px;">
+                        <i class="fa-solid fa-house"></i>
+                        <span>الرئيسية</span>
+                    </button>
+                </a>
+                <button type="button" class="btn-confirm-att" onclick="location.reload()" style="flex: 1; margin: 0; padding: 12px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>طالب آخر</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- تذييل الصفحة -->
+    <footer class="app-footer" style="margin-top: 24px;">
+        <div class="developer-badge">
+            <i class="fa-solid fa-code" style="color: #6366f1;"></i>
+            <span>تم تطوير النظام بواسطة</span>
+            <span class="developer-name">Omar Albili</span>
+            <span class="copyright-year">&copy; 2026</span>
+        </div>
+    </footer>
+
+    <script>
+        // روابط الـ API
+        const ATT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqGlBz-aIG9uqyHOB5Y30Io7GnIkRzKWbejh-nHMl2nhVXEUNkNPAG9S4IvXRObd-N/exec";
+        const TEACHERS_URL   = "https://script.google.com/macros/s/AKfycbxazZen_peC1JAwtTJ-eScQmuCWpsPYvqeubzj0ZL1NdBVOxV4hJjixFYQ_LkU_rSvs/exec";
+        const STUDENTS_DB_URL = "https://script.google.com/macros/s/AKfycbx35GjixD83S6R69c2mnA9KvgG93I0PX-yrIDdokwLRzaTTkd9fRR3fwuyHRWLUJDK5/exec";
+
+        const attGradesData = {
+            "ابتدائي":        ["تأسيس", "الثالث", "الرابع", "الخامس", "السادس"],
+            "ابتدائي لغات":   ["تأسيس", "الثالث", "الرابع", "الخامس", "السادس"],
+            "اعدادي":         ["الأول", "الثاني", "الثالث"],
+            "اعدادي لغات":    ["الأول", "الثاني", "الثالث"],
+            "ثانوي":          ["الأول", "الثاني", "الثالث"],
+            "ثانوي لغات":     ["الأول", "الثاني", "الثالث"]
+        };
+
+        let allStudentsList = [];
+        let allTeachersList = [];
+
+        // ── التحقق من صحة التوكن الزمني ──
+        function verifyToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const tsParam = urlParams.get('t') || urlParams.get('ts');
+
+            // إذا دخل الطالب بدون توكن، نسمح له بالتسجيل اليدوي مع تنبيه
+            if (!token) {
+                const badge = document.getElementById("qrBadge");
+                if (badge) {
+                    badge.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> <span>تسجيل حضور مباشر</span>';
+                    badge.style.color = '#6366f1';
+                    badge.style.background = 'rgba(99, 102, 241, 0.12)';
+                    badge.style.borderColor = 'rgba(99, 102, 241, 0.25)';
+                }
+                showView("viewForm");
+                return true;
+            }
+
+            // فحص التوكن المحفوظ في السنتر أو الزمن
+            let isValid = false;
+            const now = Date.now();
+
+            // فحص التوكن الحالي والتوكنات النشطة المخزنة
+            try {
+                const activeTokensStr = localStorage.getItem('center_active_qr_tokens');
+                if (activeTokensStr) {
+                    const activeTokens = JSON.parse(activeTokensStr);
+                    if (Array.isArray(activeTokens) && activeTokens.includes(token)) {
+                        isValid = true;
+                    }
+                }
+            } catch (_) {}
+
+            // فحص الزمن المشفر في التوكن (سماحية حتى 120 ثانية لمراعاة وقت ملء البيانات)
+            if (!isValid) {
+                try {
+                    const decoded = atob(token);
+                    const parts = decoded.split('_');
+                    const tokenTime = parseInt(parts[0], 10);
+                    if (!isNaN(tokenTime) && (now - tokenTime) <= 120000) { // 120 ثانية سماحية
+                        isValid = true;
+                    }
+                } catch (_) {}
+            }
+
+            if (!isValid && tsParam) {
+                const t = parseInt(tsParam, 10);
+                if (!isNaN(t) && (now - t) <= 120000) {
+                    isValid = true;
+                }
+            }
+
+            if (isValid) {
+                showView("viewForm");
+                return true;
+            } else {
+                showView("viewExpired");
+                return false;
+            }
+        }
+
+        function showView(viewId) {
+            ["viewExpired", "viewForm", "viewSuccess"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = (id === viewId) ? "block" : "none";
+            });
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const t = document.createElement('div');
+            t.className = `toast toast-${type} show`;
+            t.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${msg}</span>`;
+            container.appendChild(t);
+            setTimeout(() => {
+                t.classList.remove('show');
+                setTimeout(() => t.remove(), 400);
+            }, 3500);
+        }
+
+        // ── جلب المعلمين ──
+        async function loadTeachers() {
+            const sel = document.getElementById("attTeacherSelect");
+            try {
+                const res = await fetch(TEACHERS_URL);
+                const data = await res.json();
+                allTeachersList = Array.isArray(data) ? data : (data.teachers || []);
+
+                sel.innerHTML = '<option value="">-- اختر المعلم --</option>';
+                allTeachersList.forEach(t => {
+                    const name = typeof t === 'string' ? t : (t.name || t.teacherName || '');
+                    if (name) {
+                        const opt = document.createElement('option');
+                        opt.value = opt.textContent = name;
+                        sel.appendChild(opt);
+                    }
+                });
+            } catch (e) {
+                sel.innerHTML = '<option value="">-- تعذر تحميل المعلمين، اكتبه يدوياً --</option>';
+            }
+        }
+
+        // ── جلب قاعدة بيانات الطلاب للإكمال التلقائي ──
+        async function loadStudentsDb() {
+            try {
+                const cached = localStorage.getItem('center_students_db_cache');
+                if (cached) allStudentsList = JSON.parse(cached);
+            } catch (_) {}
+
+            try {
+                const res = await fetch(STUDENTS_DB_URL);
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    allStudentsList = data.map((item, idx) => ({
+                        id: item.id || idx,
+                        studentName: (item.studentName || item.name || '').trim(),
+                        teacherName: (item.teacherName || item.teacher || '').trim(),
+                        category: (item.category || '').trim(),
+                        grade: (item.grade || '').trim()
+                    })).filter(s => s.studentName);
+                    localStorage.setItem('center_students_db_cache', JSON.stringify(allStudentsList));
+                }
+            } catch (_) {}
+        }
+
+        function onCategoryChange() {
+            const cat = document.getElementById("attCategorySelect").value;
+            const sel = document.getElementById("attGradeSelect");
+            sel.innerHTML = '<option value="">-- اختر الصف --</option>';
+            (attGradesData[cat] || []).forEach(g => {
+                const o = document.createElement('option');
+                o.value = o.textContent = g;
+                sel.appendChild(o);
+            });
+        }
+
+        // ── الإكمال التلقائي لاسم الطالب ──
+        function setupStudentAutocomplete() {
+            const input = document.getElementById("attStudentNameInput");
+            const dropdown = document.getElementById("attStudentDropdown");
+            if (!input || !dropdown) return;
+
+            input.addEventListener("input", function() {
+                const q = this.value.trim().toLowerCase();
+                if (!q) {
+                    dropdown.style.display = "none";
+                    dropdown.innerHTML = "";
+                    return;
+                }
+
+                const matches = allStudentsList.filter(s => 
+                    s.studentName.toLowerCase().includes(q)
+                ).slice(0, 8);
+
+                if (matches.length === 0) {
+                    dropdown.style.display = "none";
+                    dropdown.innerHTML = "";
+                    return;
+                }
+
+                dropdown.innerHTML = matches.map((s, idx) => `
+                    <div class="autocomplete-item" data-idx="${idx}">
+                        <div class="autocomplete-item-info">
+                            <strong><i class="fa-solid fa-user-check" style="color:#10b981; margin-left:6px;"></i>${s.studentName}</strong>
+                            <span><i class="fa-solid fa-chalkboard-user"></i> أ/ ${s.teacherName || 'غير محدد'} • ${s.category || ''} (${s.grade || ''})</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                dropdown.style.display = "block";
+
+                dropdown.querySelectorAll(".autocomplete-item").forEach(item => {
+                    item.addEventListener("click", function() {
+                        const sel = matches[parseInt(this.getAttribute("data-idx"), 10)];
+                        if (!sel) return;
+
+                        input.value = sel.studentName;
+                        dropdown.style.display = "none";
+
+                        // تعبئة المعلم تلقائياً
+                        if (sel.teacherName) {
+                            const tSel = document.getElementById("attTeacherSelect");
+                            let found = Array.from(tSel.options).some(o => o.value === sel.teacherName);
+                            if (!found) tSel.add(new Option(sel.teacherName, sel.teacherName));
+                            tSel.value = sel.teacherName;
+                        }
+
+                        // تعبئة الفئة والصف تلقائياً
+                        if (sel.category) {
+                            document.getElementById("attCategorySelect").value = sel.category;
+                            onCategoryChange();
+                            if (sel.grade) {
+                                document.getElementById("attGradeSelect").value = sel.grade;
+                            }
+                        }
+                    });
+                });
+            });
+
+            document.addEventListener("click", function(e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = "none";
+                }
+            });
+        }
+
+        // ── تقديم نموذج الحضور ──
+        async function handleStudentAttSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById("btnConfirmAtt");
+            const studentName = document.getElementById("attStudentNameInput").value.trim();
+            const teacher = document.getElementById("attTeacherSelect").value;
+            const category = document.getElementById("attCategorySelect").value;
+            const grade = document.getElementById("attGradeSelect").value;
+            const note = document.getElementById("attNoteInput").value.trim();
+
+            if (!studentName || !teacher || !category || !grade) {
+                showToast("يرجى ملء جميع الحقول المطلوبة", "warning");
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>جاري تسجيل حضورك...</span>';
+
+            const payload = {
+                action: "addAttendance",
+                studentName: studentName,
+                teacher: teacher,
+                category: category,
+                grade: grade,
+                date: dateStr,
+                time: timeStr,
+                status: "حاضر",
+                note: note ? (note + " [QR]") : "[سجل عبر QR]",
+                timestamp: now.toISOString(),
+                source: "student_qr"
+            };
+
+            // 1. الإرسال الفوري عبر BroadcastChannel للسنتر
+            try {
+                const bc = new BroadcastChannel('center_attendance_channel');
+                bc.postMessage({ type: 'NEW_ATTENDANCE', record: payload });
+                bc.close();
+            } catch (_) {}
+
+            // 2. التخزين في localStorage لمزامنة النوافذ المفتوحة
+            try {
+                localStorage.setItem('center_live_attendance_sync', JSON.stringify({
+                    id: Date.now(),
+                    ...payload
+                }));
+            } catch (_) {}
+
+            // 3. الإرسال النهائي إلى Google Apps Script
+            try {
+                await fetch(ATT_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                console.warn("Server sync error (saved locally):", err);
+            }
+
+            // عرض شاشة النجاح
+            document.getElementById("resStudentName").textContent = studentName;
+            document.getElementById("resTeacherName").textContent = `أ/ ${teacher}`;
+            document.getElementById("resGradeInfo").textContent = `${category} - الصف ${grade}`;
+            document.getElementById("resTimeInfo").textContent = `${dateStr} في تمام ${timeStr}`;
+
+            showView("viewSuccess");
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verifyToken();
+            loadTeachers();
+            loadStudentsDb();
+            setupStudentAutocomplete();
+        });
+    </script>
+</body>
+</html>
+

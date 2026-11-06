@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>إدارة المصروفات والمخرجات - نظام إدارة السنتر</title>
+
+    <!-- خط Cairo من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- مكتبة الأيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- ملف التنسيقات الخارجي الموحد -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <style>
+        /* كروت الإحصائيات المالية العلوية */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .stat-icon.red { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+        .stat-icon.purple { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+        .stat-icon.amber { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+        .stat-icon.emerald { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+
+        .stat-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .stat-info .stat-val {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .stat-info .stat-unit {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+
+        /* حاوية الفلاتر */
+        .filters-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            background: var(--input-bg);
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+        .filter-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .filter-field input, .filter-field select {
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 9px;
+            border: 1.5px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 13.5px;
+            box-sizing: border-box;
+        }
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .filter-actions button {
+            flex: 1;
+            padding: 9px 14px;
+            border-radius: 9px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 42px;
+        }
+
+        /* وسوم التصنيفات الملونة */
+        .cat-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .cat-tag.bills { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+        .cat-tag.rent { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
+        .cat-tag.salaries { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+        .cat-tag.tools { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+        .cat-tag.hospitality { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .cat-tag.maintenance { background: rgba(236, 72, 153, 0.12); color: #ec4899; }
+        .cat-tag.marketing { background: rgba(14, 165, 233, 0.12); color: #0ea5e9; }
+        .cat-tag.other { background: rgba(100, 116, 139, 0.15); color: #64748b; }
+
+        .table-amount {
+            font-weight: 800;
+            color: #ef4444;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        .action-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 9px;
+            border-radius: 8px;
+            transition: all .2s;
+            font-size: 14px;
+        }
+        .action-icon-btn.edit { color: #6366f1; background: rgba(99, 102, 241, 0.1); }
+        .action-icon-btn.edit:hover { background: #6366f1; color: #fff; }
+        .action-icon-btn.delete { color: #ef4444; background: rgba(239, 68, 68, 0.1); margin-right: 4px; }
+        .action-icon-btn.delete:hover { background: #ef4444; color: #fff; }
+
+        .empty-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-placeholder i {
+            font-size: 42px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .edit-banner {
+            display: none;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1.5px dashed #6366f1;
+            padding: 10px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .edit-banner.active { display: flex; }
+    </style>
+</head>
+<body>
+    <!-- سكريبت الحماية من أدوات المطور -->
+    <script src="protect.js"></script>
+
+    <!-- الفقاعات الضوئية التفاعلية للخلفية -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <!-- حاوية الإشعارات المنبثقة (Toasts) -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- شاشة التحميل (Loading Overlay) -->
+    <div id="loadingOverlay">
+        <div class="spinner-wrapper">
+            <div class="spinner"></div>
+            <div class="spinner-inner"></div>
+        </div>
+        <h3 id="loadingText">جاري معالجة البيانات، يرجى الانتظار...</h3>
+    </div>
+
+    <div class="container">
+        <!-- شريط الرأس -->
+        <div class="header-bar">
+            <div class="brand-wrapper">
+                <img src="logo.png" alt="Success Center" class="header-logo">
+                <div class="brand-text">
+                    <h1>سجل المصروفات والمخرجات</h1>
+                    <p>تسجيل وحساب كافة المصاريف التشغيلية ومخرجات السنتر ومتابعتها لحظياً</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" type="button" aria-label="تبديل الوضع">
+                    <i class="fa-solid fa-moon"></i>
+                    <span>الوضع الليلي</span>
+                </button>
+
+                <a href="index.html" class="logout-btn" style="text-decoration: none;" title="العودة للصفحة الرئيسية">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>الرئيسية</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- إحصائيات سريعة في الأعلى -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon red">
+                    <i class="fa-solid fa-money-bill-trend-up"></i>
+                </div>
+                <div class="stat-info">
+                    <h4>إجمالي المصروفات (المعروضة)</h4>
+                    <p class="stat-val"><span id="totalExpensesAmount">0</span> <span class="stat-unit">ج.م</span></p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon amber">
+                    <i class="fa-solid fa-calendar-day"></i>
+                </div>
+                <div class="stat-info">
+                    <h4>مصروفات اليوم</h4>
+                    <p class="stat-val"><span id="todayExpensesAmount">0</span> <span class="stat-unit">ج.م</span></p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon emerald">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <div class="stat-info">
+                    <h4>مصروفات هذا الشهر</h4>
+                    <p class="stat-val"><span id="monthExpensesAmount">0</span> <span class="stat-unit">ج.م</span></p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div class="stat-info">
+                    <h4>عدد السجلات</h4>
+                    <p class="stat-val"><span id="recordsCount">0</span> <span class="stat-unit">عملية</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- نموذج تسجيل أو تعديل المصروف -->
+        <div class="section" id="expenseFormSection">
+            <div class="section-title-wrapper">
+                <h2>
+                    <i class="fa-solid fa-circle-plus" style="color: #ef4444;"></i>
+                    <span id="formTitleText">تسجيل مصروف جديد</span>
+                </h2>
+            </div>
+
+            <!-- شريط حالة التعديل -->
+            <div id="editBanner" class="edit-banner">
+                <div style="display: flex; align-items: center; gap: 8px; color: #4338ca; font-weight: 700;">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>أنت الآن في وضع تعديل سجل مصروف موجود مسبقاً</span>
+                </div>
+                <button type="button" class="btn-cancel-edit" onclick="cancelEditMode()" title="إلغاء التعديل">&times; إلغاء التعديل</button>
+            </div>
+
+            <form id="expenseForm" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="editingRowId" value="">
+
+                <div class="grid-2">
+                    <div>
+                        <label><i class="fa-solid fa-calendar-day"></i> التاريخ:</label>
+                        <input type="date" id="expenseDate" required>
+                    </div>
+
+                    <div>
+                        <label><i class="fa-solid fa-coins"></i> المبلغ المدفوع (جنيه مصري):</label>
+                        <input type="number" id="expenseAmount" step="0.5" min="0.5" placeholder="مثال: 250" required>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div>
+                        <label><i class="fa-solid fa-pen-nib"></i> بند المصروف / البيان:</label>
+                        <input type="text" id="expenseTitle" placeholder="مثال: فاتورة كهرباء، شراء أدوات نظافة، صيانة طابعة..." required autocomplete="off">
+                    </div>
+
+                    <div>
+                        <label><i class="fa-solid fa-layer-group"></i> تصنيف المصروف:</label>
+                        <select id="expenseCategory" required>
+                            <option value="">-- اختر التصنيف --</option>
+                            <option value="فواتير">فواتير (كهرباء / مياه / إنترنت)</option>
+                            <option value="إيجار">إيجار المقر</option>
+                            <option value="رواتب">رواتب ومكافآت عمال / سكرتارية</option>
+                            <option value="أدوات ومستلزمات">أدوات مكتبية ومستلزمات دراسية</option>
+                            <option value="صيانة">صيانة وأجهزة ومعدات</option>
+                            <option value="ضيافة">بوفيه وضيافة ونظافة</option>
+                            <option value="دعاية وتسويق">دعاية وإعلانات ومطبوعات</option>
+                            <option value="أخرى">مصروفات ومخرجات أخرى</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div>
+                        <label><i class="fa-solid fa-user-check"></i> المسؤول عن الصرف / المستلم:</label>
+                        <input type="text" id="expenseSpentBy" placeholder="اسم القائم بالصرف أو المستلم للمبلغ..." autocomplete="off">
+                    </div>
+
+                    <div>
+                        <label><i class="fa-solid fa-note-sticky"></i> ملاحظات إضافية (اختياري):</label>
+                        <input type="text" id="expenseNotes" placeholder="أي تفاصيل أو ملاحظة تخص هذا المصروف..." autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-action-buttons">
+                    <button type="submit" id="btnSubmitExpense" class="btn-success" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span id="btnSubmitText">حفظ المصروف في الشيت</span>
+                    </button>
+                    <button type="button" id="btnCancelEdit" class="btn-warning" style="display: none;" onclick="cancelEditMode()">
+                        <i class="fa-solid fa-xmark"></i>
+                        <span>إلغاء التعديل</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- جدول عرض المصروفات والبحث -->
+        <div class="section">
+            <div class="section-title-wrapper">
+                <h2>
+                    <i class="fa-solid fa-table-list" style="color: #6366f1;"></i>
+                    <span>سجل المصروفات والمخرجات المسجلة في قاعدة البيانات</span>
+                </h2>
+                <button type="button" class="btn-refresh" onclick="fetchExpensesFromSheet(true)" title="تحديث البيانات من الشيت">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>تحديث البيانات</span>
+                </button>
+            </div>
+
+            <!-- فلاتر التصفية والبحث المتقدم -->
+            <div class="filters-bar">
+                <div class="filter-field">
+                    <label><i class="fa-solid fa-magnifying-glass"></i> بحث سريع:</label>
+                    <input type="text" id="filterSearch" placeholder="بحث بالبيان أو المسؤول..." oninput="applyFilters()">
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fa-solid fa-layer-group"></i> التصنيف:</label>
+                    <select id="filterCategory" onchange="applyFilters()">
+                        <option value="">كل التصنيفات</option>
+                        <option value="فواتير">فواتير</option>
+                        <option value="إيجار">إيجار</option>
+                        <option value="رواتب">رواتب ومكافآت</option>
+                        <option value="أدوات ومستلزمات">أدوات ومستلزمات</option>
+                        <option value="صيانة">صيانة</option>
+                        <option value="ضيافة">ضيافة ونظافة</option>
+                        <option value="دعاية وتسويق">دعاية وتسويق</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fa-solid fa-calendar-day"></i> من تاريخ:</label>
+                    <input type="date" id="filterFromDate" onchange="applyFilters()">
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fa-solid fa-calendar-day"></i> إلى تاريخ:</label>
+                    <input type="date" id="filterToDate" onchange="applyFilters()">
+                </div>
+
+                <div class="filter-actions">
+                    <button type="button" class="btn-indigo" onclick="resetFilters()" style="background: var(--card-bg); color: var(--text-secondary); border: 1.5px solid var(--border-color);" title="إعادة ضبط الفلاتر">
+                        <i class="fa-solid fa-filter-circle-xmark"></i>
+                        <span>تفريغ</span>
+                    </button>
+                    <button type="button" class="btn-indigo" onclick="exportExpensesToCSV()" style="background: #10b981;" title="تصدير كملف Excel / CSV">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>تصدير</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- جدول البيانات المتجاوب -->
+            <div class="table-responsive">
+                <table class="data-table" id="expensesTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 110px;">التاريخ</th>
+                            <th>بند المصروف / البيان</th>
+                            <th style="width: 140px;">التصنيف</th>
+                            <th style="width: 120px;">المبلغ</th>
+                            <th>المسؤول / المستلم</th>
+                            <th>ملاحظات</th>
+                            <th style="width: 90px; text-align: center;">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody">
+                        <tr>
+                            <td colspan="8" class="empty-placeholder">
+                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                <p>جاري تحميل سجلات المصروفات من قاعدة البيانات...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- تذييل الصفحة -->
+    <footer class="app-footer">
+        <div class="developer-badge">
+            <i class="fa-solid fa-code" style="color: #6366f1;"></i>
+            <span>تم تطوير النظام بواسطة</span>
+            <span class="developer-name">Omar Albili</span>
+            <span class="copyright-year">&copy; 2026</span>
+        </div>
+    </footer>
+
+    <!-- ملف الجافاسكريبت الخاص بالمصروفات -->
+    <script src="expenses.js"></script>
+</body>
+</html>
+

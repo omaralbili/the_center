@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>التقارير اليومية للمدفوعات والتحصيل - نظام إدارة السنتر</title>
+
+    <!-- خط Cairo من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- CSS العام -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <style>
+        :root {
+            --cyan-primary: #0284c7;
+            --cyan-gradient: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            --cyan-soft-bg: rgba(2, 132, 199, 0.08);
+            --cyan-border: rgba(2, 132, 199, 0.25);
+        }
+
+        /* حاوية الفلاتر وأدوات التاريخ */
+        .filter-panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 22px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .date-control-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .date-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .date-input-custom {
+            padding: 10px 16px;
+            border: 1.5px solid var(--cyan-primary);
+            border-radius: 12px;
+            font-family: var(--font-main);
+            font-size: 15px;
+            font-weight: 700;
+            background: var(--input-bg);
+            color: var(--text-color);
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .date-input-custom:focus {
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.2);
+        }
+
+        .quick-days-btns {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-day-chip {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-family: var(--font-main);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-day-chip:hover {
+            background: var(--cyan-soft-bg);
+            color: var(--cyan-primary);
+            border-color: var(--cyan-primary);
+        }
+
+        .btn-day-chip.active {
+            background: var(--cyan-gradient);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+        }
+
+        .filters-secondary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .filters-secondary-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .filters-secondary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* كروت الإحصائيات (KPIs) */
+        .kpi-reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card-rep {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .kpi-card-rep:hover {
+            transform: translateY(-2px);
+        }
+
+        .kpi-icon-box {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .kpi-card-rep.kpi-total .kpi-icon-box {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .kpi-card-rep.kpi-txs .kpi-icon-box {
+            background: rgba(2, 132, 199, 0.12);
+            color: #0284c7;
+        }
+
+        .kpi-card-rep.kpi-students .kpi-icon-box {
+            background: rgba(99, 102, 241, 0.12);
+            color: #6366f1;
+        }
+
+        .kpi-card-rep.kpi-teachers .kpi-icon-box {
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+        }
+
+        .kpi-val {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-color);
+            line-height: 1.2;
+        }
+
+        .kpi-title {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* توزيع إيراد المدرسين */
+        .teachers-breakdown-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .section-header-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .section-header-pill h3 {
+            margin: 0;
+            font-size: 16.5px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-color);
+        }
+
+        .teachers-chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .teacher-revenue-chip {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13.5px;
+            transition: all 0.2s ease;
+        }
+
+        .teacher-revenue-chip:hover {
+            border-color: var(--cyan-primary);
+            background: var(--cyan-soft-bg);
+        }
+
+        .teacher-name-txt {
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .teacher-amount-badge {
+            background: var(--cyan-gradient);
+            color: #ffffff;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 800;
+        }
+
+        .teacher-count-badge {
+            background: rgba(99, 102, 241, 0.12);
+            color: #6366f1;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* جدول المعاملات اليومي */
+        .table-panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 22px 24px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-family: var(--font-main);
+            margin-top: 14px;
+        }
+
+        .report-table th {
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 14px 16px;
+            text-align: right;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .report-table th:first-child {
+            border-top-right-radius: 12px;
+        }
+
+        .report-table th:last-child {
+            border-top-left-radius: 12px;
+            text-align: center;
+        }
+
+        .report-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13.5px;
+            color: var(--text-color);
+            vertical-align: middle;
+        }
+
+        .report-table tbody tr:hover td {
+            background: rgba(2, 132, 199, 0.04);
+        }
+
+        .report-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-amount-cell {
+            font-weight: 800;
+            color: #10b981;
+            font-size: 14.5px;
+            white-space: nowrap;
+        }
+
+        .table-time-cell {
+            color: var(--text-muted);
+            font-size: 12.5px;
+            white-space: nowrap;
+        }
+
+        .btn-view-receipt-mini {
+            background: rgba(99, 102, 241, 0.12);
+            color: #6366f1;
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: var(--font-main);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view-receipt-mini:hover {
+            background: #6366f1;
+            color: #ffffff;
+        }
+
+        /* أزرار الإجراءات العلوية */
+        .btn-print-action {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-print-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-excel-action {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-excel-action:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-back-dashboard {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-family: var(--font-main);
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back-dashboard:hover {
+            border-color: var(--cyan-primary);
+            color: var(--cyan-primary);
+        }
+
+        /* حالة لا توجد بيانات */
+        .empty-report-state {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .empty-report-state i {
+            font-size: 56px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            display: block;
+            opacity: 0.6;
+        }
+
+        .empty-report-state h4 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text-color);
+            margin: 0 0 8px 0;
+        }
+
+        .empty-report-state p {
+            color: var(--text-muted);
+            font-size: 13.5px;
+            margin: 0;
+        }
+
+        /* نافذة معاينة الإيصال المودال */
+        .receipt-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .receipt-modal-window {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 580px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .receipt-modal-header {
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .receipt-modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .receipt-modal-body {
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+        }
+
+        .receipt-modal-body img {
+            max-width: 100%;
+            max-height: 60vh;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        }
+
+        .receipt-modal-footer {
+            padding: 14px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* ترويسة وتذييل الطباعة الرسمية - تظهر في الطباعة فقط */
+        .print-only-header,
+        .print-only-footer,
+        .print-signature-section {
+            display: none;
+        }
+
+        /* ===================================================
+           تنسيقات الطباعة الاحترافية (@media print)
+           =================================================== */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-family: 'Cairo', 'Segoe UI', Arial, sans-serif !important;
+                margin: 0 !important;
+                padding: 10mm !important;
+            }
+
+            /* إخفاء عناصر التحكم والأزرار */
+            .theme-toggle-btn,
+            .btn-back-dashboard,
+            .btn-print-action,
+            .btn-excel-action,
+            .filter-panel-card,
+            .app-footer,
+            .receipt-modal-backdrop,
+            #loadingOverlay,
+            .btn-view-receipt-mini,
+            .quick-days-btns,
+            .hide-on-print {
+                display: none !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .card-panel,
+            .kpi-card-rep,
+            .teachers-breakdown-card,
+            .table-panel-card {
+                border: 1px solid #d1d5db !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                border-radius: 8px !important;
+                margin-bottom: 16px !important;
+                padding: 14px 18px !important;
+                page-break-inside: avoid;
+            }
+
+            /* ترويسة التقرير الرسمية للطباعة */
+            .print-only-header {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 2px solid #111827;
+                padding-bottom: 12px;
+                margin-bottom: 18px;
+            }
+
+            .print-header-brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .print-header-brand img {
+                width: 55px;
+                height: 55px;
+                object-fit: contain;
+            }
+
+            .print-header-text h1 {
+                margin: 0;
+                font-size: 20px;
+                font-weight: 900;
+                color: #111827;
+            }
+
+            .print-header-text p {
+                margin: 2px 0 0 0;
+                font-size: 13px;
+                color: #4b5563;
+                font-weight: 600;
+            }
+
+            .print-meta-box {
+                text-align: left;
+                font-size: 12.5px;
+                color: #374151;
+            }
+
+            .print-meta-box b {
+                color: #111827;
+            }
+
+            /* إحصائيات الطباعة */
+            .kpi-reports-grid {
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 10px !important;
+                margin-bottom: 16px !important;
+            }
+
+            .kpi-card-rep {
+                padding: 10px 14px !important;
+                border: 1.5px solid #9ca3af !important;
+            }
+
+            .kpi-val {
+                font-size: 18px !important;
+                color: #111827 !important;
+            }
+
+            .kpi-title {
+                font-size: 11px !important;
+                color: #4b5563 !important;
+            }
+
+            .kpi-icon-box {
+                width: 38px !important;
+                height: 38px !important;
+                font-size: 16px !important;
+                background: #f3f4f6 !important;
+                color: #111827 !important;
+            }
+
+            /* جدول الطباعة */
+            .report-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin-top: 10px !important;
+            }
+
+            .report-table th,
+            .report-table td {
+                border: 1px solid #9ca3af !important;
+                padding: 8px 10px !important;
+                font-size: 12px !important;
+                color: #111827 !important;
+            }
+
+            .report-table th {
+                background: #f3f4f6 !important;
+                font-weight: 800 !important;
+                color: #111827 !important;
+            }
+
+            .table-amount-cell {
+                color: #111827 !important;
+                font-weight: 900 !important;
+            }
+
+            .teacher-revenue-chip {
+                border: 1px solid #9ca3af !important;
+                background: #f9fafb !important;
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+            }
+
+            .teacher-amount-badge {
+                background: #111827 !important;
+                color: #ffffff !important;
+                padding: 2px 6px !important;
+            }
+
+            /* قسم التوقيعات المعتمدة أسفل التقرير */
+            .print-signature-section {
+                display: flex !important;
+                justify-content: space-between;
+                margin-top: 36px;
+                padding-top: 18px;
+                border-top: 1.5px dashed #6b7280;
+                page-break-inside: avoid;
+            }
+
+            .sig-block {
+                text-align: center;
+                width: 28%;
+            }
+
+            .sig-title {
+                font-size: 13px;
+                font-weight: 800;
+                color: #111827;
+                margin-bottom: 45px;
+            }
+
+            .sig-line {
+                border-bottom: 1px dotted #111827;
+                margin-top: 40px;
+            }
+
+            .print-only-footer {
+                display: block !important;
+                text-align: center;
+                font-size: 11px;
+                color: #6b7280;
+                margin-top: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- الترويسة المطبوعة الرسمية (تظهر فقط عند الطباعة) -->
+    <div class="print-only-header">
+        <div class="print-header-brand">
+            <img src="logo.png" alt="شعار السنتر">
+            <div class="print-header-text">
+                <h1>سنتر النجاح التعليمي</h1>
+                <p>تقرير التحصيل والمدفوعات اليومي المعتمد</p>
+            </div>
+        </div>
+        <div class="print-meta-box">
+            <div>تاريخ التقرير: <b id="printReportDateTxt">-</b></div>
+            <div>وقت وتاريخ الاستخراج: <span id="printGeneratedTimeTxt">-</span></div>
+            <div>إجمالي اليوم: <b id="printTotalAmountTxt">-</b></div>
+        </div>
+    </div>
+
+    <!-- الحاوية الرئيسية -->
+    <div class="container">
+
+        <!-- ترويسة التطبيق العلوية -->
+        <header class="app-header hide-on-print" style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <a href="index.html" class="btn-back-dashboard" title="العودة لشاشة التحصيل الرئيسية">
+                        <i class="fa-solid fa-arrow-right"></i>
+                        <span>الرئيسية</span>
+                    </a>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="logo.png" alt="شعار السنتر" style="width: 44px; height: 44px; object-fit: contain;">
+                        <div>
+                            <h1 style="margin: 0; font-size: 20px; font-weight: 900; color: var(--text-color);">التقارير اليومية للمدفوعات</h1>
+                            <p style="margin: 2px 0 0 0; font-size: 12.5px; color: var(--text-muted);">كشف مدفوعات الطلاب وتوزيع الإيرادات حسب التاريخ المختار</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الإجراءات (طباعة، تصدير، ثيم) -->
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-print-action" onclick="printReport()" title="طباعة كشف الحساب اليومي">
+                        <i class="fa-solid fa-print"></i>
+                        <span>طباعة التقرير</span>
+                    </button>
+                    <button type="button" class="btn-excel-action" onclick="exportToCsv()" title="تصدير كشف اليوم كملف Excel / CSV">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>تصدير Excel</span>
+                    </button>
+                    <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="تبديل المظهر (ليلي / نهاري)" aria-label="تبديل المظهر">
+                        <i class="fa-solid fa-moon"></i>
+                        <span>الوضع الليلي</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- لوحة التحكم بالتاريخ والفلاتر -->
+        <div class="filter-panel-card hide-on-print">
+            <div class="date-control-header">
+                <div class="date-picker-group">
+                    <label for="reportDateInput" style="font-weight: 700; color: var(--text-color); font-size: 14.5px;">
+                        <i class="fa-regular fa-calendar-days" style="color: var(--cyan-primary);"></i>
+                        تاريخ التقرير:
+                    </label>
+                    <input type="date" id="reportDateInput" class="date-input-custom" onchange="onDateChange(this.value)">
+                    <button type="button" class="btn-day-chip" onclick="shiftDay(-1)" title="اليوم السابق">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="btn-day-chip" onclick="shiftDay(1)" title="اليوم التالي">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                </div>
+
+                <!-- أزرار التاريخ السريعة -->
+                <div class="quick-days-btns">
+                    <button type="button" class="btn-day-chip active" id="btnToday" onclick="selectQuickDate(0)">اليوم</button>
+                    <button type="button" class="btn-day-chip" id="btnYesterday" onclick="selectQuickDate(-1)">أمس</button>
+                    <button type="button" class="btn-day-chip" id="btnTwoDaysAgo" onclick="selectQuickDate(-2)">أول أمس</button>
+                    <button type="button" class="btn-day-chip" onclick="refreshDailyData()" title="تحديث البيانات من الشيت">
+                        <i class="fa-solid fa-rotate"></i> تحديث
+                    </button>
+                </div>
+            </div>
+
+            <!-- فلاتر التصفية الإضافية (معلم، فئة، وبحث سريع) -->
+            <div class="filters-secondary-grid">
+                <div>
+                    <label style="font-size: 12.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-chalkboard-user"></i> تصفية حسب المعلم:
+                    </label>
+                    <select id="teacherFilterSelect" onchange="applyFilters()" style="width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); font-family: var(--font-main); font-size: 13.5px; outline: none;">
+                        <option value="">-- جميع المعلمين --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 12.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-layer-group"></i> تصفية حسب المرحلة:
+                    </label>
+                    <select id="categoryFilterSelect" onchange="applyFilters()" style="width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); font-family: var(--font-main); font-size: 13.5px; outline: none;">
+                        <option value="">-- جميع المراحل --</option>
+                        <option value="ابتدائي">ابتدائي</option>
+                        <option value="ابتدائي لغات">ابتدائي لغات</option>
+                        <option value="اعدادي">إعدادي</option>
+                        <option value="اعدادي لغات">إعدادي لغات</option>
+                        <option value="ثانوي">ثانوي</option>
+                        <option value="ثانوي لغات">ثانوي لغات</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 12.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-magnifying-glass"></i> بحث سريع باسم الطالب:
+                    </label>
+                    <input type="text" id="searchInput" placeholder="اكتب اسم الطالب..." oninput="applyFilters()" style="width: 100%; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); font-family: var(--font-main); font-size: 13.5px; outline: none;">
+                </div>
+
+                <div style="display: flex; align-items: flex-end;">
+                    <button type="button" onclick="resetFilters()" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-muted); padding: 9px 14px; border-radius: 10px; font-family: var(--font-main); font-size: 13px; font-weight: 700; cursor: pointer; height: 42px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-filter-circle-xmark"></i> إعادة ضبط
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- كروت مؤشرات الأداء السريعة (KPIs) -->
+        <div class="kpi-reports-grid">
+            <div class="kpi-card-rep kpi-total">
+                <div class="kpi-icon-box">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpiTotalRevenue">0 ج.م</div>
+                    <div class="kpi-title">إجمالي التحصيل اليومي</div>
+                </div>
+            </div>
+
+            <div class="kpi-card-rep kpi-txs">
+                <div class="kpi-icon-box">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpiTotalTransactions">0</div>
+                    <div class="kpi-title">إجمالي عمليات الدفع</div>
+                </div>
+            </div>
+
+            <div class="kpi-card-rep kpi-students">
+                <div class="kpi-icon-box">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpiDistinctStudents">0</div>
+                    <div class="kpi-title">عدد الطلاب المسددين</div>
+                </div>
+            </div>
+
+            <div class="kpi-card-rep kpi-teachers">
+                <div class="kpi-icon-box">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpiActiveTeachers">0</div>
+                    <div class="kpi-title">عدد المعلمين المستفيدين</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- توزيع الإيراد على المعلمين في هذا اليوم -->
+        <div class="teachers-breakdown-card" id="teachersBreakdownSection">
+            <div class="section-header-pill">
+                <h3>
+                    <i class="fa-solid fa-chart-pie" style="color: var(--cyan-primary);"></i>
+                    توزيع التحصيل حسب المعلمين
+                </h3>
+                <span style="font-size: 12.5px; color: var(--text-muted); font-weight: 600;" id="teachersCountSummary"></span>
+            </div>
+            <div class="teachers-chips-container" id="teachersChipsContainer">
+                <!-- سيتم ملؤه ديناميكياً -->
+            </div>
+        </div>
+
+        <!-- جدول المعاملات اليومي التفصيلي -->
+        <div class="table-panel-card">
+            <div class="section-header-pill">
+                <h3>
+                    <i class="fa-solid fa-list-check" style="color: #10b981;"></i>
+                    كشف المعاملات والمدفوعات التفصيلي
+                </h3>
+                <div style="font-size: 13px; font-weight: 700; color: var(--cyan-primary);" id="tableCountBadge">
+                    0 معاملة
+                </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="report-table" id="dailyReportTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 120px;">وقت الدفع</th>
+                            <th>اسم الطالب</th>
+                            <th>المعلم</th>
+                            <th>المرحلة الدراسية</th>
+                            <th>الصف</th>
+                            <th style="width: 120px;">المبلغ</th>
+                            <th style="width: 90px;" class="hide-on-print">الإيصال</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody">
+                        <!-- سيتم توليد الصفوف عبر الجافاسكريبت -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- رسالة حالة الفراغ -->
+            <div class="empty-report-state" id="emptyReportState" style="display: none;">
+                <i class="fa-regular fa-folder-open"></i>
+                <h4>لا توجد عمليات دفع مسجلة في هذا التاريخ</h4>
+                <p>يمكنك تغيير التاريخ من الأعلى أو اختيار يوم آخر لعرض تقريره.</p>
+            </div>
+        </div>
+
+        <!-- قسم التوقيعات المعتمدة (يظهر في الطباعة الورقية فقط) -->
+        <div class="print-signature-section">
+            <div class="sig-block">
+                <div class="sig-title">مسؤول الخزينة والتحصيل</div>
+                <div class="sig-line"></div>
+                <div style="font-size: 11px; color: #4b5563; margin-top: 4px;">الاسم والتوقيع</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-title">المشرف المالي والحسابات</div>
+                <div class="sig-line"></div>
+                <div style="font-size: 11px; color: #4b5563; margin-top: 4px;">الاسم والتوقيع</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-title">اعتماد مدير السنتر</div>
+                <div class="sig-line"></div>
+                <div style="font-size: 11px; color: #4b5563; margin-top: 4px;">الختم والتوقيع</div>
+            </div>
+        </div>
+
+        <div class="print-only-footer">
+            تم استخراج هذا التقرير آلياً بواسطة نظام إدارة سنتر النجاح &copy; 2026
+        </div>
+
+    </div>
+
+    <!-- نافذة معاينة صورة الإيصال (Modal) -->
+    <div id="receiptPreviewModal" class="receipt-modal-backdrop" onclick="closeReceiptModal(event)">
+        <div class="receipt-modal-window" onclick="event.stopPropagation()">
+            <div class="receipt-modal-header">
+                <h3><i class="fa-solid fa-receipt" style="color: #6366f1;"></i> معاينة إيصال الدفع</h3>
+                <button type="button" onclick="closeReceiptModalDirect()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div class="receipt-modal-body">
+                <img id="modalReceiptImg" src="" alt="إيصال الدفع" onerror="onReceiptImgError()">
+                <div id="modalReceiptFallback" style="display: none; text-align: center; padding: 20px;">
+                    <i class="fa-solid fa-image-slash" style="font-size: 40px; color: #ef4444; margin-bottom: 10px; display: block;"></i>
+                    <p style="margin: 0 0 12px 0; color: var(--text-color); font-weight: 700;">تعذر التحميل المباشر للصورة</p>
+                    <a id="modalFallbackLink" href="#" target="_blank" class="btn-view-receipt-mini" style="padding: 8px 16px; font-size: 13px;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> فتح الإيصال على Google Drive
+                    </a>
+                </div>
+            </div>
+            <div class="receipt-modal-footer">
+                <a id="modalExternalLink" href="#" target="_blank" class="btn-view-receipt-mini" style="text-decoration: none;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> فتح في نافذة مستقلة
+                </a>
+                <button type="button" class="btn-day-chip" onclick="closeReceiptModalDirect()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- تذييل الصفحة للمتصفح -->
+    <footer class="app-footer hide-on-print">
+        <div class="developer-badge">
+            <i class="fa-solid fa-code" style="color: #6366f1;"></i>
+            <span>تم تطوير النظام بواسطة</span>
+            <span class="developer-name">Omar Albili</span>
+            <span class="copyright-year">&copy; 2026</span>
+        </div>
+    </footer>
+
+    <!-- حاوية التوست للإشعارات -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- شاشة التحميل الاحترافية الموحدة -->
+    <div id="loadingOverlay" style="display: none;">
+        <div class="spinner-wrapper">
+            <div class="spinner"></div>
+            <div class="spinner-inner"></div>
+        </div>
+        <h3>جاري تحميل تقرير التحصيل اليومي...</h3>
+    </div>
+
+    <!-- سكربت الحماية -->
+    <script src="protect.js"></script>
+    <!-- سكربت التقارير اليومية -->
+    <script src="daily-reports.js?v=1793827311108"></script>
+</body>
+</html>
+

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>نظام إدارة حسابات النجاح</title>
+    
+    <!-- خط Cairo من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- مكتبة الأيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- ملف التنسيقات الخارجي -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon شعار النظام -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+</head>
+<body>
+    <!-- سكريبت الحماية من أدوات المطور -->
+    <script src="protect.js"></script>
+
+<!-- الفقاعات الضوئية التفاعلية للخلفية -->
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
+<div class="ambient-glow glow-3"></div>
+
+<!-- حاوية الإشعارات المنبثقة الحديثة (Toasts) -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- شاشة التحميل الاحترافية (Loading Overlay) -->
+<div id="loadingOverlay">
+    <div class="spinner-wrapper">
+        <div class="spinner"></div>
+        <div class="spinner-inner"></div>
+    </div>
+    <h3>جاري معالجة البيانات، يرجى الانتظار...</h3>
+</div>
+
+<!-- ===================================================
+     1. شاشة الدخول الترحيبية واختيار الرتبة
+     =================================================== -->
+<div id="welcomeScreen" class="welcome-container">
+    <div class="welcome-top-actions">
+        <button class="theme-toggle-btn" onclick="toggleTheme()" type="button" aria-label="تبديل الوضع">
+            <i class="fa-solid fa-moon"></i>
+            <span>الوضع الليلي</span>
+        </button>
+    </div>
+
+    <div class="welcome-header">
+        <div class="welcome-logo-badge">
+            <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <h1 class="welcome-title">مرحبا بك في نظام التحصيل الشهري للسنتر</h1>
+        <p class="welcome-desc">يرجى اختيار صفة الدخول للمتابعة والبدء في استخدام النظام</p>
+    </div>
+
+    <div class="roles-grid">
+        <!-- كارت الطالب -->
+        <div class="role-card student-card" onclick="loginAsStudent()">
+            <div class="role-icon-box">
+                <i class="fa-solid fa-user-graduate"></i>
+            </div>
+            <h3>طالب</h3>
+            <p>دفع المصروفات الشهرية وتسجيل بيانات التحصيل ورفع الإيصال</p>
+            <button class="role-btn btn-student" type="button">
+                <span>دخول كطالب</span>
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <button class="role-btn btn-qr-scan-hero" type="button" onclick="event.stopPropagation(); openStudentQrScannerModal()" title="فتح الكاميرا لمسح كود الغياب والحضور">
+                <i class="fa-solid fa-camera"></i>
+                <span>تسجيل الغياب عبر الـ QR</span>
+            </button>
+        </div>
+
+        <!-- كارت الإدارة -->
+        <div class="role-card admin-card" onclick="openAdminLoginModal()">
+            <div class="role-icon-box">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <h3>الإدارة</h3>
+            <p>إدارة بيانات المعلمين، تصفية الحسابات، ومتابعة كامل التحصيلات</p>
+            <button class="role-btn btn-admin" type="button">
+                <span>دخول الإدارة</span>
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================
+     2. نافذة تسجيل دخول الإدارة (Login Modal)
+     =================================================== -->
+<div id="adminLoginModal" class="modal-overlay" style="display: none;">
+    <div id="adminModalCard" class="modal-card">
+        <button class="modal-close" onclick="closeAdminLoginModal()" type="button" aria-label="إغلاق">&times;</button>
+        
+        <div class="modal-header">
+            <div class="modal-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3>تسجيل دخول الإدارة</h3>
+            <p>يرجى إدخال اسم المستخدم وكلمة المرور للمتابعة</p>
+        </div>
+
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+            <label><i class="fa-solid fa-user"></i> اسم المستخدم:</label>
+            <input type="text" id="adminUsername" placeholder="Admin" required autocomplete="username">
+
+            <label><i class="fa-solid fa-lock"></i> كلمة المرور:</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="adminPassword" placeholder="••••••••" required autocomplete="current-password">
+                <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility()" title="إظهار / إخفاء كلمة المرور">
+                    <i id="pwdToggleIcon" class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="btn-indigo">
+                    <i class="fa-solid fa-right-to-bracket"></i> دخول
+                </button>
+                <button type="button" class="btn-secondary" onclick="closeAdminLoginModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===================================================
+     نافذة الدفع عبر انستا باي (InstaPay Modal)
+     =================================================== -->
+<div id="instapayModal" class="modal-overlay" style="display: none;" onclick="handleModalOverlayClick(event, 'instapayModal')">
+    <div class="modal-card payment-modal-card">
+        <button class="modal-close" onclick="closeInstapayModal()" type="button" aria-label="إغلاق">&times;</button>
+        <div class="modal-header">
+            <div class="modal-icon instapay-modal-icon">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <h3>الدفع عبر انستا باي (InstaPay)</h3>
+        </div>
+        <div class="payment-modal-body">
+            <div class="service-notice-box">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <p>سيتم تفعيل الخدمة قريباً</p>
+            </div>
+            <p class="service-notice-desc">نعمل حالياً على تجهيز بوابات الدفع الفوري لتوفير التحصيل التلقائي المباشر.</p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-indigo" onclick="closeInstapayModal()">
+                <i class="fa-solid fa-check"></i> حسناً
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================
+     نافذة الدفع عبر فودافون كاش (Vodafone Cash Modal)
+     =================================================== -->
+<div id="vodafoneModal" class="modal-overlay" style="display: none;" onclick="handleModalOverlayClick(event, 'vodafoneModal')">
+    <div class="modal-card payment-modal-card">
+        <button class="modal-close" onclick="closeVodafoneModal()" type="button" aria-label="إغلاق">&times;</button>
+        <div class="modal-header">
+            <div class="modal-icon vodafone-modal-icon">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+            </div>
+            <h3>الدفع عبر فودافون كاش</h3>
+            <p>يرجى تحويل المبلغ المطلوب إلى رقم المحفظة التالي:</p>
+        </div>
+        <div class="payment-modal-body">
+            <!-- صندوق عرض المبلغ المطلوب تحويله بدقة -->
+            <div class="modal-required-amount-badge">
+                <span class="required-amount-label">المبلغ المطلوب تحويله:</span>
+                <span id="vodafoneRequiredAmount" class="required-amount-val">0 ج.م</span>
+            </div>
+
+            <!-- صندوق رقم التحويل -->
+            <div class="transfer-number-card">
+                <span class="transfer-label">رقم التحويل :</span>
+                <div class="transfer-number-wrapper">
+                    <span id="vodafoneNumber" class="transfer-number" dir="ltr">01010692410</span>
+                    <button type="button" class="btn-copy-number" onclick="copyVodafoneNumber()" title="نسخ الرقم">
+                        <i id="copyIcon" class="fa-solid fa-copy"></i>
+                        <span id="copyText">نسخ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- رسالة التحذير المطلوبة -->
+            <div class="transfer-warning-box">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                    <strong>تحذير هام:</strong>
+                    <p>قم بأخذ لقطة شاشة للتحويل موثقة بالتاريخ والوقت</p>
+                </div>
+            </div>
+            <p class="receipt-note-text"><i class="fa-solid fa-circle-info"></i> ثم قم برفع لقطة الشاشة في خانة صورة الإيصال بالأسفل.</p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-success btn-paid-confirm" onclick="confirmPaymentAndClose()">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>تم الدفع</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================
+     3. شاشة التطبيق الرئيسية ولوحة التحكم
+     =================================================== -->
+<div id="mainAppScreen" class="container" style="display: none;">
+    <!-- شريط الرأس وزر التبديل بين الليل والنهار وزر تسجيل الخروج -->
+    <div class="header-bar">
+        <div class="brand-wrapper">
+            <div class="brand-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div class="brand-text">
+                <h1>نظام إدارة حسابات النجاح</h1>
+                <p>إدارة المدفوعات والتحصيلات وحسابات المدرسين بسلاسة</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <!-- شارة الرتبة (طالب / إدارة) -->
+            <div id="userRoleBadge"></div>
+
+            <button id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" type="button">
+                <i class="fa-solid fa-moon"></i>
+                <span>الوضع الليلي</span>
+            </button>
+
+            <button class="logout-btn" onclick="logout()" type="button" title="العودة لشاشة الاختيار">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>خروج</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 1. قسم إدارة المعلمين (خاص بالإدارة فقط) -->
+    <div id="sectionAddTeacher" class="section admin-only">
+        <h2><i class="fa-solid fa-user-plus" style="color: #6366f1;"></i> إضافة معلم جديد</h2>
+        <div class="responsive-action-row">
+            <div class="input-cell">
+                <input type="text" id="newTeacherName" placeholder="اكتب اسم المعلم هنا...">
+            </div>
+            <div class="btn-cell">
+                <button onclick="addTeacher()"><i class="fa-solid fa-plus"></i> إضافة المعلم</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. قسم حذف المعلم (خاص بالإدارة فقط) -->
+    <div id="sectionDeleteTeacher" class="section danger admin-only">
+        <h2><i class="fa-solid fa-user-xmark" style="color: #ef4444;"></i> حذف معلم (حذف نهائي لكل بياناته)</h2>
+        <div class="responsive-action-row">
+            <div class="input-cell">
+                <select id="deleteTeacherSelect">
+                    <option value="">-- اختر المعلم المراد حذفه --</option>
+                </select>
+            </div>
+            <div class="btn-cell">
+                <button class="btn-danger" onclick="deleteTeacher()"><i class="fa-solid fa-trash-can"></i> حذف المعلم</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. قسم التحصيل (متاح للطالب والإدارة معاً) -->
+    <div id="sectionPayment" class="section student-allowed">
+        <div style="text-align:center; margin-bottom: 16px;">
+            <img src="logo.png" alt="Success Center" class="payment-section-logo">
+        </div>
+        <h2><i class="fa-solid fa-receipt" style="color: #10b981;"></i> تحصيل مصروفات طالب</h2>
+        
+        <label><i class="fa-solid fa-user"></i> اسم الطالب:</label>
+        <div class="autocomplete-box-wrapper">
+            <input type="text" id="studentName" placeholder="اكتب اسم الطالب ثلاثي..." autocomplete="off">
+            <div id="studentNameDropdown" class="autocomplete-dropdown"></div>
+        </div>
+
+        <!-- =========================================================
+             حاوية المعلمين المتعددين (تظهر تلقائياً عندما يكون للطالب أكثر من مدرس)
+             ========================================================= -->
+        <div id="multiTeachersContainer" class="multi-teachers-panel" style="display: none;">
+            <div class="multi-teachers-header">
+                <div class="multi-header-info">
+                    <span class="multi-title"><i class="fa-solid fa-chalkboard-user"></i> معلمو الطالب المسجل لديهم:</span>
+                    <span id="multiTeacherCountBadge" class="multi-badge">0 معلمين</span>
+                </div>
+                <div class="multi-header-actions">
+                    <button type="button" class="btn-chip" onclick="toggleSelectAllTeachers(true)" title="تحديد جميع معلمي الطالب">
+                        <i class="fa-solid fa-check-double"></i> تحديد الكل
+                    </button>
+                    <button type="button" class="btn-chip btn-chip-outline" onclick="cancelMultiAndReturnToSingle()" title="إلغاء الدفع الجماعي والرجوع للدفع الفردي">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> إلغاء الدفع الجماعي (رجوع للدفع الفردي)
+                    </button>
+                </div>
+            </div>
+
+            <!-- أداة التطبيق السريع للمبلغ الموحد -->
+            <div class="quick-unified-amount-box">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>مبلغ موحد لكل مدرس:</span>
+                <input type="text" id="quickUnifiedAmount" placeholder="مثال: 150" inputmode="numeric" oninput="convertAmountToEnglish(this)">
+                <button type="button" onclick="applyUnifiedAmountToSelected()">
+                    <i class="fa-solid fa-check"></i> تطبيق
+                </button>
+            </div>
+
+            <!-- قائمة كروت المدرسين -->
+            <div id="multiTeachersList" class="multi-teachers-list"></div>
+
+            <!-- شريط الملخص المالي اللحظي -->
+            <div class="multi-summary-bar">
+                <div class="summary-stat">
+                    <span>عدد المعلمين المحددين:</span>
+                    <strong id="summarySelectedCount">0</strong>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-stat total-stat">
+                    <span>إجمالي المبلغ المطلوب دفعه:</span>
+                    <strong id="summaryTotalAmount">0</strong>
+                    <small>جنيه</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم الاختيار الفردي التقليدي (يظهر في الوضع اليدوي أو للطلاب غير المسجلين) -->
+        <div id="singleTeacherSection">
+            <div class="section-switch-row" id="manualSwitchBackRow" style="display: none;">
+                <button type="button" class="btn-chip btn-chip-switch" onclick="reopenMultiTeachersSection()">
+                    <i class="fa-solid fa-arrow-right"></i> الرجوع لمعلمي الطالب المسجلين (<span id="backToTeachersCount">0</span>)
+                </button>
+            </div>
+
+            <label><i class="fa-solid fa-chalkboard-user"></i> المعلم:</label>
+            <select id="teacherSelect">
+                <option value="">-- جاري التحميل... --</option>
+            </select>
+
+            <div class="grid-2">
+                <div>
+                    <label><i class="fa-solid fa-layer-group"></i> الفئة الدراسية:</label>
+                    <select id="categorySelect" onchange="updateGrades('categorySelect', 'gradeSelect')">
+                        <option value="">-- اختر الفئة --</option>
+                        <option value="ابتدائي">ابتدائي</option>
+                        <option value="ابتدائي لغات">ابتدائي لغات</option>
+                        <option value="اعدادي">إعدادي</option>
+                        <option value="اعدادي لغات">إعدادي لغات</option>
+                        <option value="ثانوي">ثانوي</option>
+                        <option value="ثانوي لغات">ثانوي لغات</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-book-open"></i> الصف الدراسي:</label>
+                    <select id="gradeSelect">
+                        <option value="">-- اختر الصف أولاً --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="payment-amount-row">
+                <div class="input-cell">
+                    <label><i class="fa-solid fa-money-bill-wave"></i> المبلغ المحصل (جنيه):</label>
+                    <input type="text" id="amount" placeholder="مثال: ١٥٠ أو 150" inputmode="numeric" oninput="convertAmountToEnglish(this)">
+                </div>
+                <div class="qr-cell">
+                    <div class="qr-box">
+                        <i class="fa-solid fa-qrcode"></i>
+                        <span>انستا باي<br><small style="font-size: 11px; opacity: 0.8;">InstaPay QR</small></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- أزرار الدفع الإلكتروني (انستا باي وفودافون كاش) -->
+        <div class="payment-options-box">
+            <label><i class="fa-solid fa-wallet"></i> خيارات الدفع الإلكتروني المباشر:</label>
+            <div class="payment-options-grid">
+                <button type="button" class="btn-payment btn-instapay-pay" onclick="openInstapayModal()">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>الدفع انستا باي</span>
+                </button>
+                <button type="button" class="btn-payment btn-vodafone-pay" onclick="openVodafoneModal()">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>الدفع بفودافون كاش</span>
+                </button>
+            </div>
+        </div>
+
+        <label><i class="fa-solid fa-calendar-days"></i> تاريخ ووقت التحصيل:</label>
+        <input type="datetime-local" id="dateTime">
+
+        <label><i class="fa-solid fa-image"></i> رفع صورة الإيصال (هااااام جداً):</label>
+        <input type="file" id="receiptFile" accept="image/*">
+
+        <button class="btn-success" onclick="addTransaction()"><i class="fa-solid fa-floppy-disk"></i> حفظ بيانات التحصيل</button>
+        
+        <!-- زر الاستعلام عن مدفوعات الطالب (للإدارة) -->
+        <a href="student-inquiry.html" target="_blank" class="admin-only" style="text-decoration: none; display: block; margin-top: 10px;">
+            <button type="button" class="btn-indigo" style="width: 100%; margin-top: 0; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+                <i class="fa-solid fa-magnifying-glass-dollar"></i>
+                <span>الاستعلام عن مدفوعات طالب</span>
+            </button>
+        </a>
+
+        <!-- زر مراجعة وتأكيد طلبات الدفع المعلقة (للإدارة) -->
+        <a href="pending-payments.html" target="_blank" class="admin-only" style="text-decoration: none; display: block; margin-top: 10px;">
+            <button type="button" class="btn-warning" style="width: 100%; margin-top: 0; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; border: none; font-weight: 700;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>تأكد من حالات الدفع (الطلبات المعلقة)</span>
+            </button>
+        </a>
+
+        <!-- زر صفحة التقارير اليومية للمدفوعات والطباعة (للإدارة) -->
+        <a href="daily-reports.html" target="_blank" class="admin-only" style="text-decoration: none; display: block; margin-top: 10px;">
+            <button type="button" style="width: 100%; margin-top: 0; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; font-weight: 700; padding: 12px 18px; border-radius: 12px; font-family: var(--font-main); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>التقارير اليومية للمدفوعات والطباعة</span>
+            </button>
+        </a>
+    </div>
+
+    <!-- 4. قسم تصفية الحسابات (خاص بالإدارة فقط) -->
+    <div id="sectionClearDues" class="section warning admin-only">
+        <h2><i class="fa-solid fa-calculator" style="color: #f59e0b;"></i> تصفية حساب معلم (تصفير مبالغ فرقة)</h2>
+        
+        <label><i class="fa-solid fa-chalkboard-user"></i> المعلم:</label>
+        <select id="clearTeacherSelect">
+            <option value="">-- اختر المعلم --</option>
+        </select>
+
+        <div class="grid-2">
+            <div>
+                <label><i class="fa-solid fa-layer-group"></i> الفئة الدراسية:</label>
+                <select id="clearCategorySelect" onchange="updateGrades('clearCategorySelect', 'clearGradeSelect')">
+                    <option value="">-- اختر الفئة --</option>
+                    <option value="ابتدائي">ابتدائي</option>
+                    <option value="ابتدائي لغات">ابتدائي لغات</option>
+                    <option value="اعدادي">إعدادي</option>
+                    <option value="اعدادي لغات">إعدادي لغات</option>
+                    <option value="ثانوي">ثانوي</option>
+                    <option value="ثانوي لغات">ثانوي لغات</option>
+                </select>
+            </div>
+            <div>
+                <label><i class="fa-solid fa-book-open"></i> الصف الدراسي:</label>
+                <select id="clearGradeSelect">
+                    <option value="">-- اختر الصف أولاً --</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-warning" onclick="clearTeacherDues()"><i class="fa-solid fa-broom"></i> تصفية حساب هذه الفرقة</button>
+    </div>
+
+    <!-- 5. قسم بوابة إضافة الطلاب (خاص بالإدارة فقط) -->
+    <div id="sectionManageStudents" class="section admin-only" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border-color: rgba(99, 102, 241, 0.3);">
+        <div class="responsive-action-row" style="align-items: center;">
+            <div class="input-cell">
+                <h2 style="margin: 0 0 6px 0;"><i class="fa-solid fa-users-gear" style="color: #6366f1;"></i> إدارة وتوزيع الطلاب</h2>
+                <p style="margin: 0; font-size: 13.5px; color: var(--text-muted);">تسجيل طلاب جدد للمعلمين، وعرض إحصائيات وحسابات الفئات والصفوف الدراسية لكل مدرس.</p>
+            </div>
+            <div class="btn-cell">
+                <a href="students.html" target="_blank" style="text-decoration: none; display: block;">
+                    <button type="button" class="btn-indigo" style="margin-top: 0;" title="فتح صفحة إضافة الطلاب في نافذة جديدة">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>إضافة الطلاب</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم تسجيل الحضور والغياب (خاص بالإدارة) -->
+    <div class="section admin-only" style="background: linear-gradient(135deg, rgba(16,185,129,0.07) 0%, rgba(99,102,241,0.07) 100%); border: 1.5px solid rgba(16,185,129,0.25);">
+        <div class="responsive-action-row" style="align-items: center;">
+            <div class="input-cell">
+                <h2 style="margin: 0 0 6px 0;"><i class="fa-solid fa-clipboard-user" style="color: #10b981;"></i> الحضور والغياب</h2>
+                <p style="margin: 0; font-size: 13.5px; color: var(--text-muted);">تسجيل ومتابعة حضور وغياب الطلاب لكل مدرس مع إحصائيات شهرية مفصّلة.</p>
+            </div>
+            <div class="btn-cell">
+                <a href="attendance.html" target="_blank" style="text-decoration: none; display: block;">
+                    <button type="button" style="margin-top:0; background: linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:12px 22px; border-radius:12px; font-family:var(--font-main); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(16,185,129,.3);" title="فتح صفحة الحضور والغياب">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>تسجيل الحضور</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم الاستعلام عن مدفوعات الطلاب (خاص بالإدارة) -->
+    <div class="section admin-only" style="background: linear-gradient(135deg, rgba(79,70,229,0.07) 0%, rgba(16,185,129,0.07) 100%); border: 1.5px solid rgba(79,70,229,0.25);">
+        <div class="responsive-action-row" style="align-items: center;">
+            <div class="input-cell">
+                <h2 style="margin: 0 0 6px 0;"><i class="fa-solid fa-magnifying-glass-dollar" style="color: #4f46e5;"></i> الاستعلام عن مدفوعات الطلاب</h2>
+                <p style="margin: 0; font-size: 13.5px; color: var(--text-muted);">البحث عن أي طالب بالاسم لمعرفة الشهور التي سددها ولمن من المعلمين وتفاصيل الإيصالات.</p>
+            </div>
+            <div class="btn-cell">
+                <a href="student-inquiry.html" target="_blank" style="text-decoration: none; display: block;">
+                    <button type="button" class="btn-indigo" style="margin-top:0; background: linear-gradient(135deg,#4f46e5,#4338ca);" title="فتح شاشة الاستعلام">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>الاستعلام عن طالب</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم إدارة المصروفات والمخرجات (خاص بالإدارة) -->
+    <div class="section admin-only" style="background: linear-gradient(135deg, rgba(239,68,68,0.07) 0%, rgba(245,158,11,0.07) 100%); border: 1.5px solid rgba(239,68,68,0.25);">
+        <div class="responsive-action-row" style="align-items: center;">
+            <div class="input-cell">
+                <h2 style="margin: 0 0 6px 0;"><i class="fa-solid fa-wallet" style="color: #ef4444;"></i> حساب المصروفات والمخرجات</h2>
+                <p style="margin: 0; font-size: 13.5px; color: var(--text-muted);">تسجيل ومتابعة مصاريف ومخرجات السنتر اليومية والشهرية مع جدول تفصيلي وإحصائيات مباشرة من قاعدة البيانات.</p>
+            </div>
+            <div class="btn-cell">
+                <a href="expenses.html" target="_blank" style="text-decoration: none; display: block;">
+                    <button type="button" style="margin-top:0; background: linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; padding:12px 22px; border-radius:12px; font-family:var(--font-main); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(239,68,68,.3);" title="فتح صفحة المصروفات">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>إدارة المصروفات</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم تقارير التحصيل اليومية والطباعة (خاص بالإدارة) -->
+    <div class="section admin-only" style="background: linear-gradient(135deg, rgba(2,132,199,0.07) 0%, rgba(16,185,129,0.07) 100%); border: 1.5px solid rgba(2,132,199,0.25);">
+        <div class="responsive-action-row" style="align-items: center;">
+            <div class="input-cell">
+                <h2 style="margin: 0 0 6px 0;"><i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i> تقارير التحصيل اليومية والطباعة</h2>
+                <p style="margin: 0; font-size: 13.5px; color: var(--text-muted);">عرض كشف مدفوعات أي يوم محدد، وتوزيع الإيراد على المعلمين، وطباعة كشف الحساب اليومي المعتمد بنقرة واحدة.</p>
+            </div>
+            <div class="btn-cell">
+                <a href="daily-reports.html" target="_blank" style="text-decoration: none; display: block;">
+                    <button type="button" style="margin-top:0; background: linear-gradient(135deg,#0284c7,#0369a1); color:#fff; border:none; padding:12px 22px; border-radius:12px; font-family:var(--font-main); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(2,132,199,.3);" title="فتح صفحة التقارير اليومية">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>التقارير اليومية</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===================================================
+     نافذة مسح رمز الحضور والغياب للطلاب (QR Scanner Modal)
+     =================================================== -->
+<div id="studentQrScannerModal" class="modal-overlay" style="display: none;" onclick="handleModalOverlayClick(event, 'studentQrScannerModal')">
+    <div class="modal-card qr-scanner-modal-card">
+        <button class="modal-close" onclick="closeStudentQrScannerModal()" type="button" aria-label="إغلاق">&times;</button>
+        
+        <div class="modal-header">
+            <div class="modal-icon qr-scanner-modal-icon">
+                <i class="fa-solid fa-camera"></i>
+            </div>
+            <h3>تسجيل الغياب والحضور عبر الـ QR</h3>
+            <p>وجّه كاميرا الهاتف نحو شاشة السنتر لمسح الرمز وتسجيل حضورك فوراً</p>
+        </div>
+
+        <div class="qr-scanner-modal-body">
+            <!-- حاوية معاينة الكاميرا والماسح -->
+            <div class="qr-camera-viewport-wrapper">
+                <div id="qrCameraReader"></div>
+                <div id="qrScanReticle" class="qr-scan-reticle">
+                    <div class="laser-beam"></div>
+                    <div class="reticle-corner corner-tl"></div>
+                    <div class="reticle-corner corner-tr"></div>
+                    <div class="reticle-corner corner-bl"></div>
+                    <div class="reticle-corner corner-br"></div>
+                </div>
+                <div id="qrCameraLoading" class="qr-camera-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <span>جاري تشغيل الكاميرا...</span>
+                </div>
+            </div>
+
+            <div id="qrScannerStatus" class="qr-scanner-status-msg">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>يرجى السماح بالوصول للكاميرا عند الطلب</span>
+            </div>
+
+            <!-- أزرار مساعدة في الماسح -->
+            <div class="qr-scanner-quick-tools">
+                <button type="button" class="btn-qr-tool" id="btnSwitchCamera" onclick="switchQrCamera()" title="تبديل الكاميرا">
+                    <i class="fa-solid fa-camera-rotate"></i>
+                    <span>تبديل الكاميرا</span>
+                </button>
+                <label class="btn-qr-tool btn-qr-upload" title="اختيار صورة كود QR من الهاتف">
+                    <i class="fa-solid fa-image"></i>
+                    <span>مسح من صورة</span>
+                    <input type="file" id="qrFileInput" accept="image/*" style="display:none;" onchange="handleQrFileScan(this)">
+                </label>
+            </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 14px;">
+            <a href="student-attendance.html" target="_blank" style="text-decoration:none; width: 100%;">
+                <button type="button" class="btn-secondary" style="width:100%;" onclick="closeStudentQrScannerModal()">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>تسجيل الحضور يدوياً بدون كاميرا</span>
+                </button>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- تذييل الصفحة -->
+<footer class="app-footer">
+    <div class="developer-badge">
+        <i class="fa-solid fa-code" style="color: #6366f1;"></i>
+        <span>تم تطوير النظام بواسطة</span>
+        <span class="developer-name">Omar Albili</span>
+        <span class="copyright-year">&copy; 2026</span>
+    </div>
+</footer>
+
+<!-- مكتبة مسح الـ QR عبر الكاميرا html5-qrcode -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<!-- ملف الجافاسكريبت الخارجي -->
+<script src="script.js?v=1793827311108"></script>
+</body>
+</html>

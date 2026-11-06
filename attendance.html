@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>تسجيل الحضور والغياب - نظام إدارة السنتر</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <style>
+        /* ── تبويبات الصفحة ─────────────────────────── */
+        .att-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .att-tab-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 11px 18px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+        .att-tab-btn.active {
+            background: #6366f1;
+            color: #fff;
+            border-color: #6366f1;
+            box-shadow: 0 4px 14px rgba(99,102,241,.35);
+        }
+        .att-tab-btn:hover:not(.active) {
+            border-color: #6366f1;
+            color: #6366f1;
+        }
+        .att-panel { display: none; }
+        .att-panel.active { display: block; }
+
+        /* ── حالة الحضور ────────────────────────────── */
+        .status-toggle {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0 0;
+        }
+        .status-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--card-bg);
+            font-family: var(--font-main);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .status-btn.present.selected {
+            background: #10b981;
+            color: #fff;
+            border-color: #10b981;
+            box-shadow: 0 4px 14px rgba(16,185,129,.3);
+        }
+        .status-btn.absent.selected {
+            background: #ef4444;
+            color: #fff;
+            border-color: #ef4444;
+            box-shadow: 0 4px 14px rgba(239,68,68,.3);
+        }
+        .status-btn:hover:not(.selected) { border-color: #6366f1; }
+
+        /* ── جدول السجلات ───────────────────────────── */
+        .att-table-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .att-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            min-width: 600px;
+        }
+        .att-table th {
+            background: #1e3a8a;
+            color: #fff;
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .att-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .att-table tr:last-child td { border-bottom: none; }
+        .att-table tr:hover td { background: var(--hover-bg); }
+        .badge-present {
+            background: #d1fae5; color: #065f46;
+            padding: 3px 12px; border-radius: 20px;
+            font-weight: 700; font-size: 12px;
+        }
+        .badge-absent {
+            background: #fee2e2; color: #991b1b;
+            padding: 3px 12px; border-radius: 20px;
+            font-weight: 700; font-size: 12px;
+        }
+        [data-theme="dark"] .badge-present { background: #064e3b; color: #6ee7b7; }
+        [data-theme="dark"] .badge-absent  { background: #7f1d1d; color: #fca5a5; }
+
+        /* ── بطاقات الإحصائيات ──────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px 14px;
+            text-align: center;
+        }
+        .stat-card .stat-num {
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .stat-card .stat-label { font-size: 13px; color: var(--text-muted); }
+        .stat-present .stat-num { color: #10b981; }
+        .stat-absent  .stat-num { color: #ef4444; }
+        .stat-total   .stat-num { color: #6366f1; }
+        .stat-rate    .stat-num { color: #f59e0b; }
+
+        /* شريط نسبة الحضور */
+        .progress-bar-wrap {
+            background: var(--border-color);
+            border-radius: 99px;
+            height: 10px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, #10b981, #6366f1);
+            transition: width .5s;
+        }
+
+        /* ── فلتر السجلات ───────────────────────────── */
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        /* ── أزرار التعديل والحذف ───────────────────── */
+        .btn-edit-sm {
+            background: #6366f1; color: #fff;
+            border: none; border-radius: 7px;
+            padding: 5px 12px; cursor: pointer;
+            font-size: 12px; font-family: var(--font-main);
+            margin-left: 4px;
+        }
+        .btn-del-sm {
+            background: #ef4444; color: #fff;
+            border: none; border-radius: 7px;
+            padding: 5px 12px; cursor: pointer;
+            font-size: 12px; font-family: var(--font-main);
+        }
+
+        /* ── جدول الإحصائيات الشهرية ────────────────── */
+        .month-stats-table th { background: #7c3aed; }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; opacity: .4; }
+    </style>
+</head>
+<body>
+    <script src="protect.js"></script>
+
+<!-- الخلفية الضوئية -->
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
+
+<!-- إشعارات Toast -->
+<div id="toastContainer" class="toast-container"></div>
+
+<div class="container">
+
+    <!-- ── شريط الرأس ─────────────────────────────── -->
+    <div class="header-bar">
+        <div class="brand-wrapper">
+            <img src="logo.png" alt="Success Center" class="header-logo">
+            <div class="brand-text">
+                <h1>تسجيل الحضور والغياب</h1>
+                <p>متابعة حضور وغياب الطلاب لكل مدرس على مدار الشهر</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" type="button">
+                <i class="fa-solid fa-moon"></i>
+                <span>الوضع الليلي</span>
+            </button>
+            <button class="logout-btn" onclick="window.close()" type="button" title="إغلاق والعودة">
+                <i class="fa-solid fa-xmark"></i>
+                <span>إغلاق</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ── تبويبات ─────────────────────────────────── -->
+    <div class="att-tabs">
+        <button class="att-tab-btn active" onclick="switchTab('tabRecord', this)">
+            <i class="fa-solid fa-clipboard-user"></i> تسجيل الحضور
+        </button>
+        <button class="att-tab-btn" onclick="switchTab('tabRecords', this)">
+            <i class="fa-solid fa-table-list"></i> سجل الحضور والغياب
+        </button>
+        <button class="att-tab-btn" onclick="switchTab('tabStats', this)">
+            <i class="fa-solid fa-chart-bar"></i> الإحصائيات الشهرية
+        </button>
+        <button class="att-tab-btn" onclick="switchTab('tabQr', this)">
+            <i class="fa-solid fa-qrcode"></i> شاشة الـ QR للسنتر
+        </button>
+        <a href="qr-display.html" target="_blank" style="text-decoration:none;">
+            <button class="att-tab-btn" type="button" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1.5px solid rgba(16, 185, 129, 0.35);" title="فتح شاشة الـ QR المستقلة بملء الشاشة للتلفاز">
+                <i class="fa-solid fa-up-right-from-square"></i> عرض خارجي للـ QR
+            </button>
+        </a>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         تبويب 1: تسجيل حضور / غياب
+         ══════════════════════════════════════════════ -->
+    <div id="tabRecord" class="att-panel active">
+        <div class="section">
+            <h2><i class="fa-solid fa-clipboard-user" style="color:#6366f1;"></i>
+                <span id="formTitle">تسجيل حضور / غياب طالب</span>
+            </h2>
+
+            <!-- حالة الحضور -->
+            <label><i class="fa-solid fa-circle-dot"></i> الحالة:</label>
+            <div class="status-toggle">
+                <button class="status-btn present selected" id="btnPresent"
+                        onclick="selectStatus('حاضر')">
+                    <i class="fa-solid fa-circle-check"></i> حاضر
+                </button>
+                <button class="status-btn absent" id="btnAbsent"
+                        onclick="selectStatus('غائب')">
+                    <i class="fa-solid fa-circle-xmark"></i> غائب
+                </button>
+            </div>
+            <input type="hidden" id="attStatus" value="حاضر">
+
+            <div class="grid-2" style="margin-top:14px;">
+                <div>
+                    <label><i class="fa-solid fa-user"></i> اسم الطالب:</label>
+                    <div class="autocomplete-box-wrapper">
+                        <input type="text" id="attStudentName" placeholder="اكتب اسم الطالب..." autocomplete="off">
+                        <div id="attStudentDropdown" class="autocomplete-dropdown"></div>
+                    </div>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-chalkboard-user"></i> المعلم:</label>
+                    <select id="attTeacherSelect" onchange="onAttTeacherChange()">
+                        <option value="">-- اختر المعلم --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <label><i class="fa-solid fa-layer-group"></i> الفئة الدراسية:</label>
+                    <select id="attCategorySelect" onchange="updateAttGrades()">
+                        <option value="">-- اختر الفئة --</option>
+                        <option value="ابتدائي">ابتدائي</option>
+                        <option value="ابتدائي لغات">ابتدائي لغات</option>
+                        <option value="اعدادي">إعدادي</option>
+                        <option value="اعدادي لغات">إعدادي لغات</option>
+                        <option value="ثانوي">ثانوي</option>
+                        <option value="ثانوي لغات">ثانوي لغات</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-graduation-cap"></i> الصف الدراسي:</label>
+                    <select id="attGradeSelect">
+                        <option value="">-- اختر الصف --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <label><i class="fa-solid fa-calendar-day"></i> التاريخ:</label>
+                    <input type="date" id="attDate">
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-clock"></i> الوقت:</label>
+                    <input type="time" id="attTime">
+                </div>
+            </div>
+
+            <label><i class="fa-solid fa-note-sticky"></i> ملاحظة (اختياري):</label>
+            <input type="text" id="attNote" placeholder="مثال: مريض، رحلة مدرسية...">
+
+            <!-- زر الحفظ -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                <button id="btnSaveAtt" onclick="saveAttendance()">
+                    <i class="fa-solid fa-floppy-disk"></i> حفظ السجل
+                </button>
+                <button id="btnCancelEdit" class="btn-danger" onclick="cancelAttEdit()"
+                        style="display:none;">
+                    <i class="fa-solid fa-xmark"></i> إلغاء التعديل
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         تبويب 2: سجل الحضور والغياب
+         ══════════════════════════════════════════════ -->
+    <div id="tabRecords" class="att-panel">
+        <div class="section">
+            <h2><i class="fa-solid fa-table-list" style="color:#6366f1;"></i> سجل الحضور والغياب</h2>
+
+            <!-- فلتر -->
+            <div class="filter-row">
+                <div>
+                    <label><i class="fa-solid fa-chalkboard-user"></i> المعلم:</label>
+                    <select id="filterTeacher" onchange="applyFilter()">
+                        <option value="">-- كل المعلمين --</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-layer-group"></i> الفئة:</label>
+                    <select id="filterCategory" onchange="onFilterCatChange()">
+                        <option value="">-- كل الفئات --</option>
+                        <option value="ابتدائي">ابتدائي</option>
+                        <option value="ابتدائي لغات">ابتدائي لغات</option>
+                        <option value="اعدادي">إعدادي</option>
+                        <option value="اعدادي لغات">إعدادي لغات</option>
+                        <option value="ثانوي">ثانوي</option>
+                        <option value="ثانوي لغات">ثانوي لغات</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-graduation-cap"></i> الصف:</label>
+                    <select id="filterGrade" onchange="applyFilter()">
+                        <option value="">-- كل الصفوف --</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-circle-dot"></i> الحالة:</label>
+                    <select id="filterStatus" onchange="applyFilter()">
+                        <option value="">-- الكل --</option>
+                        <option value="حاضر">حاضر فقط</option>
+                        <option value="غائب">غائب فقط</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-calendar"></i> الشهر:</label>
+                    <input type="month" id="filterMonth" onchange="applyFilter()">
+                </div>
+            </div>
+
+            <button onclick="loadAllRecords()" style="margin-bottom:12px;">
+                <i class="fa-solid fa-rotate"></i> تحديث السجل
+            </button>
+
+            <!-- الجدول -->
+            <div class="att-table-wrap">
+                <table class="att-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>اسم الطالب</th>
+                            <th>المعلم</th>
+                            <th>الفئة</th>
+                            <th>الصف</th>
+                            <th>التاريخ</th>
+                            <th>الوقت</th>
+                            <th>الحالة</th>
+                            <th>ملاحظة</th>
+                            <th>إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attTableBody">
+                        <tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل البيانات...</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="recordsCount" style="margin-top:10px;font-size:13px;color:var(--text-muted);"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         تبويب 3: الإحصائيات الشهرية
+         ══════════════════════════════════════════════ -->
+    <div id="tabStats" class="att-panel">
+        <div class="section">
+            <h2><i class="fa-solid fa-chart-bar" style="color:#6366f1;"></i> الإحصائيات الشهرية</h2>
+
+            <!-- فلتر الإحصائيات -->
+            <div class="filter-row">
+                <div>
+                    <label><i class="fa-solid fa-chalkboard-user"></i> المعلم:</label>
+                    <select id="statsTeacher" onchange="onStatsTeacherChange()">
+                        <option value="">-- اختر المعلم --</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-layer-group"></i> الفئة:</label>
+                    <select id="statsCategory" onchange="onStatsCatChange()">
+                        <option value="">-- اختر الفئة --</option>
+                        <option value="ابتدائي">ابتدائي</option>
+                        <option value="ابتدائي لغات">ابتدائي لغات</option>
+                        <option value="اعدادي">إعدادي</option>
+                        <option value="اعدادي لغات">إعدادي لغات</option>
+                        <option value="ثانوي">ثانوي</option>
+                        <option value="ثانوي لغات">ثانوي لغات</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-graduation-cap"></i> الصف:</label>
+                    <select id="statsGrade" onchange="renderStats()">
+                        <option value="">-- اختر الصف --</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-calendar"></i> الشهر:</label>
+                    <input type="month" id="statsMonth" onchange="renderStats()">
+                </div>
+            </div>
+
+            <!-- بطاقات الإحصاء -->
+            <div class="stats-grid" id="statsCards" style="display:none;">
+                <div class="stat-card stat-total">
+                    <div class="stat-num" id="statTotal">0</div>
+                    <div class="stat-label">إجمالي الحصص</div>
+                </div>
+                <div class="stat-card stat-present">
+                    <div class="stat-num" id="statPresent">0</div>
+                    <div class="stat-label">حاضر</div>
+                </div>
+                <div class="stat-card stat-absent">
+                    <div class="stat-num" id="statAbsent">0</div>
+                    <div class="stat-label">غائب</div>
+                </div>
+                <div class="stat-card stat-rate">
+                    <div class="stat-num" id="statRate">0%</div>
+                    <div class="stat-label">نسبة الحضور</div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="statBar" style="width:0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- جدول تفصيلي بالطلاب -->
+            <div id="statsTableWrap" style="display:none;">
+                <h3 style="margin:16px 0 10px;font-size:15px;">تفاصيل كل طالب</h3>
+                <div class="att-table-wrap">
+                    <table class="att-table month-stats-table">
+                        <thead>
+                            <tr>
+                                <th>اسم الطالب</th>
+                                <th>حاضر</th>
+                                <th>غائب</th>
+                                <th>الإجمالي</th>
+                                <th>نسبة الحضور</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="statsEmpty" class="empty-state">
+                <i class="fa-solid fa-chart-pie"></i>
+                اختر المعلم والفئة والصف والشهر لعرض الإحصائيات
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         تبويب 4: شاشة الـ QR للسنتر (QR Display Tab)
+         ══════════════════════════════════════════════ -->
+    <div id="tabQr" class="att-panel">
+        <div class="section" style="text-align: center; border-color: rgba(16, 185, 129, 0.35);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+                <h2 style="margin:0;"><i class="fa-solid fa-qrcode" style="color:#10b981;"></i> شاشة الـ QR الذكية للسنتر</h2>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn-edit-sm" onclick="forceRefreshTabQr()" title="تحديث الرمز الآن فوراً" style="padding:8px 14px; font-size:13px;">
+                        <i class="fa-solid fa-rotate"></i> تحديث الرمز
+                    </button>
+                    <a href="qr-display.html" target="_blank" style="text-decoration:none;">
+                        <button type="button" class="btn-del-sm" style="background:#10b981; padding:8px 14px; font-size:13px;" title="فتح الشاشة بملء الشاشة للتلفاز">
+                            <i class="fa-solid fa-expand"></i> شاشة كاملة
+                        </button>
+                    </a>
+                </div>
+            </div>
+
+            <p style="color:var(--text-muted); font-size:13.5px; margin-bottom:20px;">
+                اعرض هذه الشاشة للطلاب لمسح الرمز، يتجدد رمز الـ QR تلقائياً كل <strong>25 ثانية</strong> لمنع إرساله للغائبين، وتسمع نتائج الحضور هنا لحظياً!
+            </p>
+
+            <!-- صندوق الـ QR داخل التبويب -->
+            <div style="background:var(--section-bg); border:1.5px solid var(--border-color); border-radius:24px; padding:24px; max-width:440px; margin:0 auto; box-shadow:0 12px 36px rgba(0,0,0,0.06);">
+                <div style="background:#ffffff; padding:14px; border-radius:18px; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 10px 24px rgba(0,0,0,0.12); margin-bottom:16px; min-width:240px; min-height:240px;">
+                    <div id="tabQrCanvas"></div>
+                </div>
+
+                <!-- مؤقت الـ 25 ثانية -->
+                <div style="max-width:320px; margin:0 auto;">
+                    <div style="display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">
+                        <span>تجديد الرمز خلال:</span>
+                        <strong id="tabQrTimerText" style="color:#10b981; font-size:15px;">25 ثانية</strong>
+                    </div>
+                    <div style="width:100%; height:8px; background:var(--border-color); border-radius:99px; overflow:hidden;">
+                        <div id="tabQrTimerBar" style="height:100%; width:100%; background:linear-gradient(90deg, #10b981, #6366f1); border-radius:99px; transition:width 1s linear;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ملخص الحضور اللحظي لليوم داخل التبويب -->
+            <div style="margin-top:24px; text-align:right;">
+                <h3 style="font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-bolt" style="color:#f59e0b;"></i>
+                    <span>آخر المسجلين لحظياً اليوم:</span>
+                    <span id="tabQrLiveCount" class="badge-present" style="margin-right:auto;">0 مسجل</span>
+                </h3>
+                <div id="tabQrLiveList" style="display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto;">
+                    <div style="text-align:center; padding:16px; color:var(--text-muted); font-size:13px;" id="tabQrLiveEmpty">
+                        لم يُسجل أي طالب بعد، بانتظار مسح الرمز...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<!-- تذييل الصفحة -->
+<footer class="app-footer">
+    <div class="developer-badge">
+        <i class="fa-solid fa-code" style="color: #6366f1;"></i>
+        تم تطوير النظام بواسطة <strong>Omar Albili</strong>
+        <i class="fa-solid fa-copyright" style="color: #6366f1;"></i> 2026
+    </div>
+</footer>
+
+<!-- مكتبة توليد الـ QR بدون إنترنت / CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script src="attendance.js"></script>
+</body>
+</html>
+

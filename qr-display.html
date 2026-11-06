@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>شاشة رمز الـ QR الذكية للسنتر - تسجيل الحضور</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <style>
+        :root {
+            --qr-kiosk-bg: #090d16;
+            --qr-card-bg: rgba(17, 24, 39, 0.85);
+            --qr-border: rgba(99, 102, 241, 0.3);
+            --qr-primary: #10b981;
+            --qr-accent: #6366f1;
+        }
+
+        body {
+            background: var(--qr-kiosk-bg);
+            color: #ffffff;
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+        }
+
+        .kiosk-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: var(--qr-card-bg);
+            border: 1px solid var(--qr-border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .kiosk-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .kiosk-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: contain;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .kiosk-title h1 {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0;
+            color: #ffffff;
+        }
+
+        .kiosk-title p {
+            font-size: 12px;
+            margin: 0;
+            color: #94a3b8;
+        }
+
+        .kiosk-tools {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-kiosk {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-family: var(--font-main);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.25s ease;
+        }
+
+        .btn-kiosk:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: #6366f1;
+            transform: translateY(-1px);
+        }
+
+        /* ── الشبكة الرئيسية ── */
+        .kiosk-main-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            flex: 1;
+            align-items: stretch;
+        }
+
+        @media (max-width: 900px) {
+            .kiosk-main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── بطاقة الـ QR المركزية ── */
+        .qr-hero-card {
+            background: var(--qr-card-bg);
+            border: 1.5px solid var(--qr-border);
+            border-radius: 28px;
+            padding: 30px 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(20px);
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(99, 102, 241, 0.05);
+        }
+
+        .qr-badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.14);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #34d399;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13.5px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .qr-badge-status .pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 12px #10b981;
+            animation: pulseGlow 1.5s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+
+        .qr-frame-box {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 24px;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(99, 102, 241, 0.25);
+            margin: 10px 0 20px;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 250px;
+            min-height: 250px;
+        }
+
+        #qrCanvasContainer {
+            width: 250px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qrCanvasContainer img, #qrCanvasContainer canvas {
+            display: block;
+            border-radius: 12px;
+            width: 250px !important;
+            height: 250px !important;
+        }
+
+        /* ── مؤقت الـ 25 ثانية ── */
+        .qr-timer-section {
+            width: 100%;
+            max-width: 320px;
+            margin: 10px auto 0;
+        }
+
+        .timer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13.5px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .timer-header strong {
+            color: #34d399;
+            font-size: 15px;
+        }
+
+        .timer-bar-wrap {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #10b981, #6366f1);
+            border-radius: 99px;
+            transition: width 1s linear, background 0.3s;
+        }
+
+        .qr-instructions-text {
+            color: #94a3b8;
+            font-size: 13.5px;
+            margin-top: 18px;
+            line-height: 1.5;
+        }
+
+        /* ── العمود الجانبي للحضور اللحظي ── */
+        .kiosk-side-card {
+            background: var(--qr-card-bg);
+            border: 1.5px solid var(--qr-border);
+            border-radius: 28px;
+            padding: 22px 18px;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .side-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+        }
+
+        .side-header h3 {
+            font-size: 16px;
+            font-weight: 800;
+            margin: 0;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .side-counter-pill {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .live-feed-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 4px;
+            max-height: 480px;
+        }
+
+        .live-student-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideInRight 0.4s ease;
+            transition: all 0.2s ease;
+        }
+
+        .live-student-item.highlight-new {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: #10b981;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .student-item-info strong {
+            font-size: 13.5px;
+            color: #ffffff;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .student-item-info span {
+            font-size: 11.5px;
+            color: #94a3b8;
+        }
+
+        .student-item-time {
+            font-size: 11.5px;
+            color: #34d399;
+            font-weight: 700;
+            direction: ltr;
+        }
+
+        .empty-live-feed {
+            text-align: center;
+            padding: 40px 10px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .empty-live-feed i {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        /* إشعار منبثق عند حضور طالب */
+        .live-toast-alert {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(16, 185, 129, 0.95);
+            color: #ffffff;
+            padding: 14px 22px;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.5);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .live-toast-alert.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- شريط الرأس والأدوات -->
+    <div class="kiosk-navbar">
+        <div class="kiosk-brand">
+            <img src="logo.png" alt="Success Center" class="kiosk-logo">
+            <div class="kiosk-title">
+                <h1>شاشة الحضور الذكية للسنتر (QR Code)</h1>
+                <p>امسح الرمز لتسجيل حضورك في الحصة • يتجدد تلقائياً كل 25 ثانية</p>
+            </div>
+        </div>
+        <div class="kiosk-tools">
+            <button type="button" class="btn-kiosk" onclick="toggleFullscreen()" title="عرض ملء الشاشة">
+                <i class="fa-solid fa-expand"></i>
+                <span>شاشة كاملة</span>
+            </button>
+            <a href="attendance.html" style="text-decoration:none;">
+                <button type="button" class="btn-kiosk" title="العودة لصفحة الحضور">
+                    <i class="fa-solid fa-clipboard-user"></i>
+                    <span>سجل الحضور</span>
+                </button>
+            </a>
+        </div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="kiosk-main-grid">
+        <!-- قسم الـ QR التفاعلي -->
+        <div class="qr-hero-card">
+            <div class="qr-badge-status">
+                <span class="pulse-dot"></span>
+                <span>بث الرمز المباشر للسنتر • نشط الآن</span>
+            </div>
+
+            <!-- إطار كود الـ QR -->
+            <div class="qr-frame-box">
+                <div id="qrCanvasContainer">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 32px; color: #6366f1;"></i>
+                </div>
+            </div>
+
+            <!-- مؤقت الـ 25 ثانية -->
+            <div class="qr-timer-section">
+                <div class="timer-header">
+                    <span>تحديث الرمز تلقائياً خلال:</span>
+                    <strong id="timerText">25 ثانية</strong>
+                </div>
+                <div class="timer-bar-wrap">
+                    <div id="timerBar" class="timer-bar-fill"></div>
+                </div>
+            </div>
+
+            <p class="qr-instructions-text">
+                <i class="fa-solid fa-mobile-screen" style="color: #10b981;"></i> افتح كاميرا هاتفك أو زر <strong>تسجيل الغياب</strong> في التطبيق ووجّه الكاميرا نحو الرمز.<br>
+                يتم تحديث الرمز كل 25 ثانية تلقائياً لضمان حضور الطالب شخصياً بالسنتر.
+            </p>
+        </div>
+
+        <!-- العمود الجانبي للحضور اللحظي -->
+        <div class="kiosk-side-card">
+            <div class="side-header">
+                <h3>
+                    <i class="fa-solid fa-user-check" style="color: #10b981;"></i>
+                    <span>سجل الحضور اللحظي</span>
+                </h3>
+                <span id="todayCountPill" class="side-counter-pill">0 حاضر</span>
+            </div>
+
+            <div id="liveFeedContainer" class="live-feed-list">
+                <div class="empty-live-feed" id="emptyLiveFeed">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>بانتظار مسح الطلاب لكود الحضور...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إشعار Toast عند حضور طالب جديد -->
+    <div id="liveToastAlert" class="live-toast-alert">
+        <i class="fa-solid fa-circle-check" style="font-size: 20px;"></i>
+        <span id="liveToastMsg">تم تسجيل حضور طالب جديد</span>
+    </div>
+
+    <!-- مكتبة توليد QR Code بدون إنترنت / CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        // إعدادات التوليد المتغير
+        const REFRESH_SECONDS = 25;
+        let timeLeft = REFRESH_SECONDS;
+        let qrTimerInterval = null;
+        let qrcodeInstance = null;
+        let todayStudentsCount = 0;
+
+        // توليد توكن مشفر وتخزينه
+        function generateNewToken() {
+            const timestamp = Date.now();
+            const salt = Math.random().toString(36).substring(2, 9);
+            const token = btoa(`${timestamp}_${salt}`);
+
+            // حفظ التوكن النشط في localStorage ليتمكن المتصفح من التحقق منه
+            try {
+                let activeTokens = [];
+                const saved = localStorage.getItem('center_active_qr_tokens');
+                if (saved) activeTokens = JSON.parse(saved);
+                activeTokens.push(token);
+                // الاحتفاظ بآخر 5 توكنات (تغطي آخر 125 ثانية)
+                if (activeTokens.length > 5) activeTokens = activeTokens.slice(-5);
+                localStorage.setItem('center_active_qr_tokens', JSON.stringify(activeTokens));
+                localStorage.setItem('center_current_qr_token', token);
+            } catch (_) {}
+
+            return { token, timestamp };
+        }
+
+        // إنشاء رابط الحضور للطالب
+        function getStudentAttendanceUrl(token, timestamp) {
+            const origin = window.location.origin;
+            let path = window.location.pathname;
+            path = path.substring(0, path.lastIndexOf('/'));
+            // رابط متكامل يعمل أونلاين أو أوفلاين
+            return `${origin}${path}/student-attendance.html?token=${encodeURIComponent(token)}&t=${timestamp}`;
+        }
+
+        // عرض الـ QR وتحديثه
+        function renderQrCode() {
+            const { token, timestamp } = generateNewToken();
+            const targetUrl = getStudentAttendanceUrl(token, timestamp);
+
+            const container = document.getElementById("qrCanvasContainer");
+            container.innerHTML = "";
+
+            if (typeof QRCode !== "undefined") {
+                qrcodeInstance = new QRCode(container, {
+                    text: targetUrl,
+                    width: 250,
+                    height: 250,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } else {
+                // Fallback عبر صورة QR من مكتبة مفتوحة
+                const img = document.createElement("img");
+                img.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(targetUrl)}`;
+                img.alt = "QR Code";
+                container.appendChild(img);
+            }
+        }
+
+        // بدء العد التنازلي وتجديد الـ QR كل 25 ثانية
+        function startCountdown() {
+            timeLeft = REFRESH_SECONDS;
+            updateTimerUI();
+
+            if (qrTimerInterval) clearInterval(qrTimerInterval);
+
+            qrTimerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    renderQrCode();
+                    timeLeft = REFRESH_SECONDS;
+                }
+                updateTimerUI();
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const textEl = document.getElementById("timerText");
+            const barEl = document.getElementById("timerBar");
+            if (textEl) textEl.textContent = `${timeLeft} ثانية`;
+            if (barEl) {
+                const percent = (timeLeft / REFRESH_SECONDS) * 100;
+                barEl.style.width = `${percent}%`;
+
+                // تغيير اللون عند اقتراب النهاية
+                if (timeLeft <= 5) {
+                    barEl.style.background = "#ef4444";
+                    if (textEl) textEl.style.color = "#ef4444";
+                } else if (timeLeft <= 10) {
+                    barEl.style.background = "#f59e0b";
+                    if (textEl) textEl.style.color = "#f59e0b";
+                } else {
+                    barEl.style.background = "linear-gradient(90deg, #10b981, #6366f1)";
+                    if (textEl) textEl.style.color = "#34d399";
+                }
+            }
+        }
+
+        // ── تشغيل صوت تنبيه ناعم عند حضور طالب ──
+        function playChimeSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880, now + 0.1); // A5
+
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } catch (_) {}
+        }
+
+        // ── إضافة سجل حضور لحظي في القائمة الجانبية ──
+        function addLiveAttendanceItem(record) {
+            playChimeSound();
+
+            const container = document.getElementById("liveFeedContainer");
+            const emptyEl = document.getElementById("emptyLiveFeed");
+            if (emptyEl) emptyEl.style.display = "none";
+
+            todayStudentsCount++;
+            document.getElementById("todayCountPill").textContent = `${todayStudentsCount} حاضر`;
+
+            const item = document.createElement("div");
+            item.className = "live-student-item highlight-new";
+            item.innerHTML = `
+                <div class="student-item-info">
+                    <strong><i class="fa-solid fa-circle-check" style="color:#10b981; margin-left:5px;"></i>${record.studentName}</strong>
+                    <span>أ/ ${record.teacher} • ${record.category || ''} (${record.grade || ''})</span>
+                </div>
+                <div class="student-item-time">${record.time || new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</div>
+            `;
+
+            container.insertBefore(item, container.firstChild);
+
+            setTimeout(() => {
+                item.classList.remove("highlight-new");
+            }, 3000);
+
+            // عرض إشعار Toast
+            showLiveToast(`🟢 سجل حضور: ${record.studentName} (أ/ ${record.teacher})`);
+        }
+
+        function showLiveToast(msg) {
+            const toast = document.getElementById("liveToastAlert");
+            const msgEl = document.getElementById("liveToastMsg");
+            if (!toast || !msgEl) return;
+            msgEl.textContent = msg;
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3500);
+        }
+
+        // ── الاستماع اللحظي للحضور (BroadcastChannel + LocalStorage) ──
+        function setupLiveListeners() {
+            // 1. BroadcastChannel
+            try {
+                const bc = new BroadcastChannel('center_attendance_channel');
+                bc.onmessage = (event) => {
+                    if (event.data && event.data.type === 'NEW_ATTENDANCE' && event.data.record) {
+                        addLiveAttendanceItem(event.data.record);
+                    }
+                };
+            } catch (_) {}
+
+            // 2. Storage event
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'center_live_attendance_sync' && e.newValue) {
+                    try {
+                        const rec = JSON.parse(e.newValue);
+                        addLiveAttendanceItem(rec);
+                    } catch (_) {}
+                }
+            });
+        }
+
+        // ملء الشاشة
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderQrCode();
+            startCountdown();
+            setupLiveListeners();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>تأكيد طلبات الدفع المعلقة - إدارة السنتر</title>
+
+    <!-- خط Cairo من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- CSS العام للنظام -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+
+    <style>
+        /* ===================================================
+           تنسيقات الواجهة المتقدمة لطلبات الدفع المعلقة (SaaS Look)
+           =================================================== */
+        body {
+            background-color: var(--bg-page);
+            font-family: var(--font-main);
+            color: var(--text-body);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 1. الترويسة العلوية الفخمة المتوافقة مع الثيمين */
+        .top-navbar {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .top-navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-title);
+        }
+
+        .brand-subtitle {
+            margin: 2px 0 0 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .top-navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-nav-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--btn-indigo-bg);
+            color: #ffffff !important;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 12px var(--btn-indigo-shadow);
+            transition: all 0.2s ease;
+            width: auto;
+            margin: 0;
+        }
+
+        .btn-nav-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--btn-indigo-shadow);
+        }
+
+        /* 2. حاوية الصفحة الرئيسية */
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px 60px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 3. كارت ملخص رأس الصفحة */
+        .pending-header-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 26px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+        }
+
+        .pending-header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f59e0b, #ec4899, #6366f1);
+        }
+
+        .header-content-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        .header-title-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .header-icon-badge {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 18px rgba(245, 158, 11, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header-title-box h1 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-title);
+            margin: 0 0 5px 0;
+            line-height: 1.3;
+        }
+
+        .header-title-box p {
+            margin: 0;
+            font-size: 13.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .header-actions-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .stats-badge-pending {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(245, 158, 11, 0.12);
+            color: #d97706;
+            padding: 9px 18px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 14px;
+            border: 1px solid rgba(245, 158, 11, 0.28);
+            white-space: nowrap;
+        }
+
+        .btn-refresh-data {
+            background: var(--btn-indigo-bg);
+            color: #ffffff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 30px;
+            font-size: 13.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--btn-indigo-shadow);
+            transition: all 0.2s ease;
+            width: auto !important;
+            margin: 0 !important;
+            min-height: auto !important;
+            white-space: nowrap;
+        }
+
+        .btn-refresh-data:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--btn-indigo-shadow);
+        }
+
+        /* 4. شريط البحث المطور */
+        .search-filter-box {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .search-filter-box input {
+            width: 100%;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--input-color);
+            padding: 0 44px 0 40px;
+            font-size: 14.5px;
+            font-family: inherit;
+            transition: all 0.25s ease;
+            box-sizing: border-box;
+        }
+
+        .search-filter-box input:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18);
+            outline: none;
+        }
+
+        .search-filter-box .search-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        /* 5. شبكة الكروت وحل مشكلة الكارت المفرد الشاملة */
+        .pending-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+            gap: 22px;
+            align-items: start;
+        }
+
+        /* إذا وجد كارت واحد فقط في الشبكة، يتم توسيطه وضبط عرضه بأناقة لئلا يطفو أو يتشوه */
+        .pending-cards-grid:has(.pending-card:only-child) {
+            grid-template-columns: minmax(min(100%, 360px), 520px);
+            justify-content: center;
+        }
+
+        /* دعم المتصفحات الاحتياطي */
+        .pending-cards-grid.single-card-view {
+            grid-template-columns: minmax(min(100%, 360px), 520px);
+            justify-content: center;
+        }
+
+        /* 6. تصميم كارت الطالب (SaaS Card) */
+        .pending-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: 18px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+            position: relative;
+            backdrop-filter: blur(12px);
+        }
+
+        .pending-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12);
+            border-color: #f59e0b;
+        }
+
+        .card-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 14px;
+            border-bottom: 1px dashed var(--section-border);
+        }
+
+        .student-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .student-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.25) 100%);
+            color: #6366f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .student-info-text {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .student-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-title);
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .student-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .amount-pill {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 15px;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            flex-shrink: 0;
+        }
+
+        /* تفاصيل العملية */
+        .card-details-box {
+            background: var(--section-bg);
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid var(--section-border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .detail-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .detail-line .lbl {
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            color: var(--text-title);
+            font-size: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            white-space: nowrap;
+        }
+
+        .teachers-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .teacher-badge {
+            background: rgba(99, 102, 241, 0.12);
+            color: #4f46e5;
+            padding: 3px 9px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        [data-theme="dark"] .teacher-badge {
+            background: rgba(99, 102, 241, 0.22);
+            color: #a5b4fc;
+        }
+
+        .btn-view-receipt {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(59, 130, 246, 0.12);
+            color: #2563eb;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: auto !important;
+            margin: 0 !important;
+            min-height: auto !important;
+            box-shadow: none !important;
+        }
+
+        .btn-view-receipt:hover {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .btn-view-receipt {
+            color: #60a5fa;
+        }
+
+        /* شبكة أزرار الإجراءات */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .btn-action-card {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            width: 100% !important;
+            margin: 0 !important;
+            min-height: 44px !important;
+        }
+
+        .btn-action-confirm {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-action-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-action-reject {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-action-reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+        }
+
+        /* 7. إعادة بناء نافذة المعاينة (Receipt Preview Modal Overlay) */
+        .receipt-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 16px;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .receipt-modal-window {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+            border-radius: 22px;
+            width: 100%;
+            max-width: 580px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .receipt-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--section-border);
+        }
+
+        .receipt-modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-title);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .receipt-close-circle {
+            background: var(--toggle-bg) !important;
+            border: 1px solid var(--toggle-border) !important;
+            color: var(--text-muted) !important;
+            width: 34px !important;
+            height: 34px !important;
+            min-height: 34px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .receipt-close-circle:hover {
+            color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.12) !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .receipt-modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--section-bg);
+            min-height: 280px;
+            max-height: 65vh;
+        }
+
+        .receipt-image-frame {
+            max-width: 100%;
+            max-height: 58vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--section-border);
+        }
+
+        .receipt-modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 22px;
+            border-top: 1px solid var(--section-border);
+            background: var(--card-bg);
+            gap: 10px;
+        }
+
+        .btn-tab-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--toggle-bg);
+            color: var(--text-body);
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            border: 1px solid var(--toggle-border);
+            transition: all 0.2s ease;
+        }
+
+        .btn-tab-link:hover {
+            background: var(--toggle-hover);
+            color: var(--text-title);
+        }
+
+        .btn-close-modal {
+            background: var(--btn-indigo-bg);
+            color: #ffffff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--btn-indigo-shadow);
+            width: auto !important;
+            margin: 0 !important;
+            min-height: auto !important;
+        }
+
+        /* 8. شاشة الفراغ (لا توجد طلبات) */
+        .empty-box {
+            background: var(--card-bg);
+            border: 2px dashed var(--section-border);
+            border-radius: 20px;
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        .empty-box i {
+            font-size: 54px;
+            color: #10b981;
+            margin-bottom: 16px;
+        }
+
+        .empty-box h3 {
+            color: var(--text-title);
+            font-size: 18px;
+            margin: 0 0 6px 0;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- الترويسة العلوية الفاخرة (SaaS Navbar) -->
+    <header class="top-navbar">
+        <div class="top-navbar-brand">
+            <img src="logo.png" alt="شعار السنتر" class="header-logo">
+            <div>
+                <h1 class="brand-title">نظام إدارة السنتر</h1>
+                <p class="brand-subtitle">مراجعة وتأكيد طلبات دفع الطلاب</p>
+            </div>
+        </div>
+        <div class="top-navbar-actions">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="تبديل الوضع" type="button">
+                <i class="fa-solid fa-moon"></i>
+                <span>الوضع الليلي</span>
+            </button>
+            <a href="index.html" class="btn-nav-home">
+                <i class="fa-solid fa-arrow-right"></i>
+                <span>الرئيسية</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="page-container">
+
+        <!-- بطاقة رأس الصفحة -->
+        <div class="pending-header-card">
+            <div class="header-content-row">
+                <div class="header-title-box">
+                    <div class="header-icon-badge">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h1>طلبات الدفع المعلقة بانتظار التأكيد</h1>
+                        <p>راجع إيصالات الطلاب الواردة، وبمجرد الضغط على تأكيد سيتم ترحيل المعاملات لسجلات التحصيل فوراً وحذف الإيصال المؤقت لتوفير المساحة.</p>
+                    </div>
+                </div>
+                <div class="header-actions-group">
+                    <div id="pendingCountBadge" class="stats-badge-pending">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <span>جاري التحميل...</span>
+                    </div>
+                    <button class="btn-refresh-data" onclick="loadPendingRequests()" type="button">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>تحديث</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- شريط البحث -->
+            <div class="search-filter-box">
+                <input type="text" id="pendingSearchInput" placeholder="ابحث باسم الطالب أو المعلم أو الصف..." oninput="filterPendingCards()">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            </div>
+        </div>
+
+        <!-- شبكة عرض الطلبات المعلقة -->
+        <div id="pendingCardsContainer" class="pending-cards-grid"></div>
+
+        <!-- حالة لا توجد طلبات معلقة -->
+        <div id="emptyPendingContainer" class="empty-box" style="display: none;">
+            <i class="fa-solid fa-circle-check"></i>
+            <h3>لا توجد أي طلبات دفع معلقة حالياً</h3>
+            <p style="margin: 0; font-size: 14px;">كافة مدفوعات الطلاب تم تأكيدها وترحيلها بنجاح.</p>
+        </div>
+
+    </div>
+
+    <!-- نافذة معاينة صورة الإيصال المعاد بناؤها بالكامل -->
+    <div id="imagePreviewModal" class="receipt-modal-backdrop" onclick="closeImageModal(event)">
+        <div class="receipt-modal-window" onclick="event.stopPropagation()">
+            <div class="receipt-modal-header">
+                <h3><i class="fa-solid fa-receipt" style="color: #6366f1;"></i> معاينة إيصال الدفع</h3>
+                <button class="receipt-close-circle" onclick="closeImageModalDirect()" type="button" aria-label="إغلاق">&times;</button>
+            </div>
+            <div class="receipt-modal-body" id="receiptModalBody">
+                <img id="modalPreviewImage" src="" alt="إيصال الدفع" class="receipt-image-frame" onerror="handleReceiptImageError()">
+                <iframe id="modalPreviewIframe" src="" class="receipt-image-frame" style="display: none; width: 100%; height: 55vh; border: none; border-radius: 12px;" allow="autoplay"></iframe>
+                <div id="receiptFallbackNotice" style="display: none; text-align: center; padding: 24px 16px;">
+                    <i class="fa-solid fa-file-invoice-dollar" style="font-size: 52px; color: #6366f1; margin-bottom: 12px; display: block;"></i>
+                    <h4 style="margin: 0 0 8px 0; color: var(--text-title); font-size: 16px;">معاينة الإيصال على Google Drive</h4>
+                    <p style="margin: 0 0 16px 0; color: var(--text-muted); font-size: 13px; max-width: 320px;">تم رفع الإيصال بأمان. يمكنك فتحه واستعراضه بجودة كاملة بنقرة واحدة.</p>
+                    <a id="btnDirectDriveLink" href="#" target="_blank" class="btn-tab-link" style="background: var(--btn-indigo-bg); color: #fff; border: none; padding: 9px 20px; font-size: 13.5px;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>عرض الإيصال الآن</span>
+                    </a>
+                </div>
+            </div>
+            <div class="receipt-modal-footer">
+                <a id="modalExternalLink" href="#" target="_blank" class="btn-tab-link">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>فتح في نافذة جديدة</span>
+                </a>
+                <button class="btn-close-modal" onclick="closeImageModalDirect()" type="button">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- شاشة التحميل الاحترافية (Loading Overlay) الموحدة -->
+    <div id="loadingOverlay" style="display: none;">
+        <div class="spinner-wrapper">
+            <div class="spinner"></div>
+            <div class="spinner-inner"></div>
+        </div>
+        <h3>جاري معالجة البيانات، يرجى الانتظار...</h3>
+    </div>
+
+    <script src="pending-payments.js?v=1793827311108"></script>
+</body>
+</html>

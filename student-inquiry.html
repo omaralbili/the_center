@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>الاستعلام عن مدفوعات الطلاب - نظام إدارة السنتر</title>
+
+    <!-- خط Cairo من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <style>
+        .inquiry-search-section {
+            position: relative;
+            z-index: 500;
+        }
+
+        .inquiry-search-wrapper {
+            position: relative;
+            margin-bottom: 24px;
+            z-index: 1000;
+        }
+
+        #inquiryDropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            z-index: 99999 !important;
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1.5px solid var(--input-focus-border, #6366f1);
+            border-radius: 14px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .inquiry-input-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .inquiry-input-box i.search-icon {
+            position: absolute;
+            right: 18px;
+            color: #6366f1;
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .inquiry-input-box input {
+            padding-right: 50px;
+            padding-left: 45px;
+            font-size: 16px;
+            font-weight: 600;
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            height: 54px;
+            background: var(--card-bg);
+            transition: all 0.25s ease;
+        }
+
+        .inquiry-input-box input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .clear-search-btn {
+            position: absolute;
+            left: 14px;
+            background: transparent !important;
+            border: none !important;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            padding: 0;
+            margin: 0;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .clear-search-btn:hover {
+            color: #ef4444;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* بطاقة ملخص الطالب */
+        .student-profile-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%);
+            border: 1.5px solid rgba(99, 102, 241, 0.25);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .student-profile-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .student-avatar {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 8px 18px rgba(99, 102, 241, 0.3);
+            flex-shrink: 0;
+        }
+
+        .student-meta h2 {
+            margin: 0 0 4px 0;
+            font-size: 20px;
+            color: var(--text-title);
+            font-weight: 800;
+        }
+
+        .student-meta p {
+            margin: 0;
+            font-size: 13.5px;
+            color: var(--text-muted);
+        }
+
+        .student-stats-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 90px;
+        }
+
+        .stat-badge-num {
+            font-size: 18px;
+            font-weight: 800;
+            color: #6366f1;
+        }
+
+        .stat-badge-num.green { color: #10b981; }
+        .stat-badge-num.red { color: #ef4444; }
+
+        .stat-badge-label {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .badge-absent-count {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-absent-count.zero {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .teacher-badges-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        body.inquiry-page {
+            max-width: 100vw;
+            padding: 20px 14px;
+        }
+
+        body.inquiry-page .container {
+            max-width: 1050px; /* مساحة أوسع ومريحة لعرض كروت المدرسين بدون أي تداخل */
+            width: 100%;
+        }
+
+        /* شبكة بطاقات الدفع للمدرسين */
+        .teachers-payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 18px;
+            margin-top: 16px;
+        }
+
+        .teacher-pay-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: 18px;
+            padding: 18px 20px;
+            transition: all 0.25s ease;
+            position: relative;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            min-width: 0; /* منع خروج العناصر عن الحاوية */
+        }
+
+        .teacher-pay-card:hover {
+            border-color: #6366f1;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(99, 102, 241, 0.12);
+        }
+
+        .teacher-pay-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px dashed var(--border-color);
+            margin-bottom: 14px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .teacher-name-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .teacher-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.12);
+            color: #6366f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            flex-shrink: 0;
+        }
+
+        .teacher-name-box h3 {
+            margin: 0 0 3px 0;
+            font-size: 16.5px;
+            font-weight: 800;
+            color: var(--text-title);
+            line-height: 1.3;
+        }
+
+        .teacher-name-box span {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .teacher-badges-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .months-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .month-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(16, 185, 129, 0.05);
+            border: 1.5px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            font-size: 13.5px;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .month-item:hover {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: #10b981;
+        }
+
+        .month-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: var(--text-title);
+            flex: 1;
+            min-width: 120px;
+            line-height: 1.4;
+        }
+
+        .month-info i {
+            color: #10b981;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .month-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .month-amount {
+            font-weight: 800;
+            color: #10b981;
+            font-size: 14.5px;
+            background: rgba(16, 185, 129, 0.12);
+            padding: 4px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        .receipt-link-btn {
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .receipt-link-btn:hover {
+            background: #6366f1;
+            color: #fff;
+        }
+
+        /* زر حذف الدفعة المسجلة بالخطأ */
+        .btn-delete-payment {
+            background: rgba(239, 68, 68, 0.1) !important;
+            color: #ef4444 !important;
+            border: 1px solid rgba(239, 68, 68, 0.28) !important;
+            padding: 5px 10px !important;
+            border-radius: 8px !important;
+            font-size: 12px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            margin: 0 !important;
+            width: auto !important;
+            box-shadow: none !important;
+            transform: none !important;
+            white-space: nowrap !important;
+        }
+
+        .btn-delete-payment:hover {
+            background: #ef4444 !important;
+            color: #ffffff !important;
+            border-color: #ef4444 !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .btn-delete-payment.deleting {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .teachers-payment-grid {
+                grid-template-columns: 1fr;
+            }
+            .month-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .month-actions {
+                justify-content: space-between;
+            }
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-history i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.35;
+            display: block;
+        }
+
+        /* تنبيه تشابه الأسماء */
+        .duplicate-profiles-banner {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1.5px dashed rgba(245, 158, 11, 0.45);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .duplicate-profiles-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d97706;
+            font-size: 13.5px;
+        }
+
+        .duplicate-profiles-chips {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .switch-profile-btn {
+            background: var(--card-bg);
+            border: 1.5px solid rgba(245, 158, 11, 0.35);
+            color: var(--text-title);
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            font-family: inherit;
+        }
+
+        .switch-profile-btn:hover {
+            background: #f59e0b;
+            color: #fff;
+            border-color: #f59e0b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        }
+
+        /* تنسيق حالة البداية الفارغة وتعديل مسافتها */
+        .empty-history-card {
+            position: relative;
+            z-index: 1;
+            margin-top: 55px;
+            padding: 48px 24px;
+            text-align: center;
+            background: var(--section-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1.5px dashed var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .empty-state-icon-wrapper {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 16px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%);
+            border: 1.5px solid rgba(99, 102, 241, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.1);
+        }
+
+        .empty-state-icon {
+            font-size: 34px;
+            color: #6366f1;
+        }
+
+        .empty-history-card h3 {
+            color: var(--text-title);
+            font-size: 19px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+        }
+
+        .empty-history-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            max-width: 540px;
+            margin: 0 auto 20px;
+            line-height: 1.7;
+        }
+
+        .inquiry-hint-pills {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .inquiry-hint-pills span {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-title);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+</head>
+<body class="inquiry-page">
+    <!-- سكريبت الحماية -->
+    <script src="protect.js"></script>
+
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="container">
+        <!-- شريط الرأس -->
+        <div class="header-bar">
+            <div class="brand-wrapper">
+                <img src="logo.png" alt="Success Center" class="header-logo">
+                <div class="brand-text">
+                    <h1>الاستعلام عن مدفوعات الطلاب</h1>
+                    <p>البحث عن أي طالب واستعراض الشهور المسددة والمدرسين المسجل معهم</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" type="button">
+                    <i class="fa-solid fa-moon"></i>
+                    <span>الوضع الليلي</span>
+                </button>
+
+                <button class="logout-btn" onclick="window.close()" type="button" title="إغلاق والعودة للرئيسية">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>إغلاق</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- قسم البحث الذكي -->
+        <div class="section inquiry-search-section">
+            <h2><i class="fa-solid fa-magnifying-glass" style="color: #6366f1;"></i> ابحث عن اسم الطالب</h2>
+            <p style="margin-top: -6px; margin-bottom: 16px; color: var(--text-muted); font-size: 13.5px;">
+                اكتب اسم الطالب أو جزء منه للبحث السريع في قاعدة بيانات المركز:
+            </p>
+
+            <div class="inquiry-search-wrapper">
+                <div class="inquiry-input-box">
+                    <i class="fa-solid fa-search search-icon"></i>
+                    <input type="text" id="inquiryStudentInput" placeholder="اكتب اسم الطالب هنا (مثال: أحمد، محمد، يوسف)..." autocomplete="off">
+                    <button type="button" id="clearInquiryBtn" class="clear-search-btn" onclick="clearInquirySearch()" title="مسح">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+                <div id="inquiryDropdown" class="autocomplete-dropdown"></div>
+            </div>
+
+            <!-- زر تحديث البيانات اليدوي -->
+            <button type="button" onclick="loadAllData(true)" style="margin-top: 0; background: var(--card-bg); color: var(--text-title); border: 1.5px solid var(--border-color); box-shadow: none;">
+                <i class="fa-solid fa-rotate"></i>
+                <span>تحديث البيانات من الشيت</span>
+            </button>
+        </div>
+
+        <!-- قسم عرض نتائج الاستعلام -->
+        <div id="studentResultsContainer" style="display: none;">
+            <!-- بطاقة الطالب -->
+            <div class="student-profile-card">
+                <div class="student-profile-info">
+                    <div class="student-avatar">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <div class="student-meta">
+                        <h2 id="cardStudentName">—</h2>
+                        <p id="cardStudentSubtext">—</p>
+                    </div>
+                </div>
+
+                <div class="student-stats-badges">
+                    <div class="stat-badge">
+                        <div class="stat-badge-num green" id="cardTotalPaid">0 ج.م</div>
+                        <div class="stat-badge-label">إجمالي المدفوع</div>
+                    </div>
+                    <div class="stat-badge">
+                        <div class="stat-badge-num" id="cardMonthsCount">0</div>
+                        <div class="stat-badge-label">عدد الدفعات</div>
+                    </div>
+                    <div class="stat-badge">
+                        <div class="stat-badge-num" id="cardTeachersCount">0</div>
+                        <div class="stat-badge-label">عدد المعلمين</div>
+                    </div>
+                    <div class="stat-badge">
+                        <div class="stat-badge-num" style="color: #ef4444;" id="cardTotalAbsences">0</div>
+                        <div class="stat-badge-label">مرات الغياب</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تنبيه تشابه الأسماء والتبديل السريع -->
+            <div id="duplicateProfilesContainer" style="display: none;"></div>
+
+            <!-- تفاصيل الدفعات لكل مدرس -->
+            <div class="section">
+                <h2><i class="fa-solid fa-receipt" style="color: #10b981;"></i> الشهور والمدفوعات لكل مدرس</h2>
+                <div id="teachersGrid" class="teachers-payment-grid"></div>
+            </div>
+        </div>
+
+        <!-- حالة فارغة عند فتح الصفحة -->
+        <div id="initialEmptyState" class="empty-history-card">
+            <div class="empty-state-icon-wrapper">
+                <i class="fa-solid fa-user-graduate empty-state-icon"></i>
+            </div>
+            <h3>يرجى البحث عن طالب</h3>
+            <p>
+                اكتب اسم الطالب في شريط البحث بالأعلى لعرض سجله المالي والشهور المسددة لكل معلم وسجلات الغياب بدقة.
+            </p>
+            <div class="inquiry-hint-pills">
+                <span><i class="fa-solid fa-bolt" style="color: #6366f1;"></i> بحث ذكي وفوري</span>
+                <span><i class="fa-solid fa-layer-group" style="color: #10b981;"></i> فصل تام حسب المرحلة والصف</span>
+                <span><i class="fa-solid fa-receipt" style="color: #f59e0b;"></i> عرض كامل للإيصالات والغياب</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- تذييل الصفحة -->
+    <footer class="app-footer">
+        <div class="developer-badge">
+            <i class="fa-solid fa-code" style="color: #6366f1;"></i>
+            <span>تم تطوير النظام بواسطة</span>
+            <span class="developer-name">Omar Albili</span>
+            <span class="copyright-year">&copy; 2026</span>
+        </div>
+    </footer>
+
+    <script src="student-inquiry.js"></script>
+</body>
+</html>
+

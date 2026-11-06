@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>إضافة طلاب جدد للمعلمين - نظام إدارة السنتر</title>
+    
+    <!-- خط Cairo من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- مكتبة الأيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- ملف التنسيقات الخارجي -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon شعار النظام -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+</head>
+<body>
+    <!-- سكريبت الحماية من أدوات المطور -->
+    <script src="protect.js"></script>
+
+<!-- الفقاعات الضوئية التفاعلية للخلفية -->
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
+<div class="ambient-glow glow-3"></div>
+
+<!-- حاوية الإشعارات المنبثقة الحديثة (Toasts) -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- شاشة التحميل الاحترافية (Loading Overlay) -->
+<div id="loadingOverlay">
+    <div class="spinner-wrapper">
+        <div class="spinner"></div>
+        <div class="spinner-inner"></div>
+    </div>
+    <h3 id="loadingText">جاري حفظ بيانات الطالب في الشيت...</h3>
+</div>
+
+<div class="container">
+    <!-- شريط الرأس -->
+    <div class="header-bar">
+        <div class="brand-wrapper">
+            <img src="logo.png" alt="Success Center" class="header-logo">
+            <div class="brand-text">
+                <h1>إضافة طلاب جدد للمعلمين</h1>
+                <p>تسجيل وتوزيع الطلاب وحساب عدد الفئات والصفوف لكل معلم</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" type="button">
+                <i class="fa-solid fa-moon"></i>
+                <span>الوضع الليلي</span>
+            </button>
+
+            <button class="logout-btn" onclick="window.close()" type="button" title="إغلاق هذه الصفحة والعودة للرئيسية">
+                <i class="fa-solid fa-xmark"></i>
+                <span>إغلاق</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 1. نموذج إضافة وبحث وتعديل الطلاب -->
+    <div class="section">
+        <div class="section-title-wrapper">
+            <h2>
+                <i class="fa-solid fa-user-pen" style="color: #10b981;"></i>
+                <span id="formTitleText">بيانات تسجيل وتعديل الطلاب</span>
+            </h2>
+            <div id="editingStatusBadge" class="editing-status-badge" style="display: none;">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span id="editingStatusText">وضع التعديل والحذف</span>
+                <button type="button" class="btn-cancel-edit" onclick="cancelEditMode()" title="إلغاء والعودة لوضع الإضافة الجديد">&times;</button>
+            </div>
+        </div>
+
+        <!-- صندوق البحث السريع عن الطالب لسحب بياناته -->
+        <div class="student-search-box">
+            <label><i class="fa-solid fa-magnifying-glass"></i> بحث سريع عن طالب (سحب بياناته من الشيت للتعديل أو الحذف):</label>
+            <div class="search-input-wrapper">
+                <input type="text" id="quickSearchInput" placeholder="اكتب اسم الطالب هنا للبحث وسحب بياناته فوراً..." autocomplete="off" oninput="handleQuickSearch(this.value)">
+                <button type="button" class="search-clear-btn" id="searchClearBtn" onclick="clearQuickSearch()" style="display: none;" title="مسح البحث">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <!-- القائمة المنسدلة لنتائج البحث الفوري -->
+            <div id="searchResultsDropdown" class="search-results-dropdown" style="display: none;"></div>
+        </div>
+        
+        <form id="studentRegistrationForm" onsubmit="handleFormSubmit(event)">
+            <label><i class="fa-solid fa-user"></i> اسم الطالب:</label>
+            <input type="text" id="studentNameInput" placeholder="اكتب اسم الطالب ثلاثي..." required autocomplete="off">
+
+            <label><i class="fa-solid fa-chalkboard-user"></i> المعلم:</label>
+            <select id="teacherSelect" required onchange="handleTeacherSelectChange()">
+                <option value="">-- جاري تحميل قائمة المعلمين... --</option>
+            </select>
+
+            <div class="grid-2">
+                <div>
+                    <label><i class="fa-solid fa-layer-group"></i> اختر الفئة:</label>
+                    <select id="categorySelect" onchange="updateGrades('categorySelect', 'gradeSelect')" required>
+                        <option value="">-- اختر الفئة الدراسية --</option>
+                        <option value="ابتدائي">ابتدائي</option>
+                        <option value="ابتدائي لغات">ابتدائي لغات</option>
+                        <option value="اعدادي">إعدادي</option>
+                        <option value="اعدادي لغات">إعدادي لغات</option>
+                        <option value="ثانوي">ثانوي</option>
+                        <option value="ثانوي لغات">ثانوي لغات</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-book-open"></i> الصف الدراسي:</label>
+                    <select id="gradeSelect" required>
+                        <option value="">-- اختر الصف أولاً --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- أزرار الإجراءات (حفظ جديد / تعديل / حذف) -->
+            <div class="form-action-buttons">
+                <!-- زر الحفظ كطالب جديد (الوضع الافتراضي) -->
+                <button type="submit" id="btnSaveNew" class="btn-success">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>حفظ وتسجيل الطالب في الشيت الجديد</span>
+                </button>
+
+                <!-- أزرار التعديل والحذف (تتفعل وتظهر عند البحث وتحديد الطالب والمعلم) -->
+                <button type="button" id="btnUpdateStudent" class="btn-indigo" style="display: none;" onclick="handleUpdateStudent()">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>تعديل بيانات الطالب</span>
+                </button>
+
+                <button type="button" id="btnDeleteStudent" class="btn-danger" style="display: none;" onclick="handleDeleteStudent()">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span id="btnDeleteText">حذف الطالب من عند المعلم المحدد</span>
+                </button>
+
+                <button type="button" id="btnCancelEdit" class="btn-secondary" style="display: none;" onclick="cancelEditMode()">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                    <span>إلغاء والعودة لإضافة جديد</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. كروت الإحصائيات العامة -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon students">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <h4>إجمالي الطلاب المسجلين</h4>
+                <div class="stat-value" id="totalStudentsCount">0</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon teachers">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+            <div class="stat-info">
+                <h4>معلمون لديهم طلاب</h4>
+                <div class="stat-value" id="activeTeachersCount">0</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon classes">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div class="stat-info">
+                <h4>الصفوف المغطاة</h4>
+                <div class="stat-value" id="totalClassesCount">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. قسم حسابات وإحصائيات المدرسين (كام فئة بكام صف دراسي) -->
+    <div class="section warning">
+        <h2>
+            <i class="fa-solid fa-calculator" style="color: #f59e0b;"></i>
+            <span>توزيع وإحصائيات المدرسين (عدد الفئات والصفوف لكل مدرس)</span>
+        </h2>
+        <p style="margin: 0 0 14px 0; font-size: 13.5px; color: var(--text-muted);">
+            يوضح كل معلم وعدد الفئات المسجلة له وعدد الصفوف الدراسية وإجمالي الطلاب لديه بدقة:
+        </p>
+
+        <div id="teachersBreakdownContainer" class="teachers-breakdown-grid">
+            <!-- يتم تعبئة بطاقات حسابات المدرسين تلقائياً بواسطة JavaScript -->
+        </div>
+    </div>
+
+    <!-- 4. جدول سجل الطلاب المسجلين -->
+    <div class="section">
+        <h2><i class="fa-solid fa-list-check" style="color: #6366f1;"></i> سجل الطلاب المسجلين حديثاً</h2>
+        
+        <div class="table-toolbar">
+            <input type="text" id="searchStudentInput" placeholder="🔍 تصفية الجدول باسم الطالب..." oninput="filterStudentsTable()" style="flex: 2;">
+            <select id="filterTeacherSelect" onchange="filterStudentsTable()" style="flex: 1;">
+                <option value="">-- كل المعلمين --</option>
+            </select>
+        </div>
+
+        <div class="table-responsive">
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>اسم الطالب</th>
+                        <th>المعلم</th>
+                        <th>الفئة</th>
+                        <th>الصف الدراسي</th>
+                        <th>تاريخ التسجيل</th>
+                        <th style="width: 80px; text-align: center;">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsTableBody">
+                    <!-- يتم عرض صفوف الطلاب هنا -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- تذييل الصفحة -->
+<footer class="app-footer">
+    <div class="developer-badge">
+        <i class="fa-solid fa-code" style="color: #6366f1;"></i>
+        <span>تم تطوير النظام بواسطة</span>
+        <span class="developer-name">Omar Albili</span>
+        <span class="copyright-year">&copy; 2026</span>
+    </div>
+</footer>
+
+<!-- ملف الجافاسكريبت الخاص بصفحة إضافة الطلاب -->
+<script src="students.js"></script>
+</body>
+</html>
+
